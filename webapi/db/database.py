@@ -11,19 +11,24 @@ engine = create_engine(
 )
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
-# Base = declarative_base()
-
-## Functions for helper
-def create_all() -> None:
+def create_tables():
     """
     Create if doesnt exists
     """
     SQLModel.metadata.create_all(engine)
 
+class CustomSession:
+    def __init__(self, engine):
+        self.session = Session(engine)
+
+    def __enter__(self):
+        return self.session
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        self.session.close()
 
 def get_session():
     """
     Create a DB session
     """
-    with Session(engine) as session:
-        yield session
+    return CustomSession(engine)

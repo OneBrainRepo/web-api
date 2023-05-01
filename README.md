@@ -5,8 +5,17 @@ Used Libraries :
 
 - https://sqlmodel.tiangolo.com/ | SQL Model , A wrapper for SQL Alchemy designed for FastAPI
 - https://fastapi.tiangolo.com/ | FastAPI , Python module for Web API
+- https://docs.pydantic.dev/latest/usage/types/#standard-library-types | Python Types
 
 Notes :
 
 Currently we are also using Document DB for conversation history.
 Later on use similar schema for MongoDB or other NoSQL dbs
+
+For generating JWT token key use this command
+
+In the pipeline to add to the .env
+`openssl rand -hex 32`
+
+
+FIREBASE WOULD BE NEGLECTED, IT IS NOT SUITABLE FOR OUR USAGE PURPOSES

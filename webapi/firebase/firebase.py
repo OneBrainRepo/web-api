@@ -8,6 +8,7 @@ firebase_admin.initialize_app(cred,{
     'databaseURL' : 'https://demoproject-f7ba1-default-rtdb.firebaseio.com/'
 })
 
+# DB Records
 demo = db.reference("/demo")
 demo_chat_history = db.reference("/demo_history")
 

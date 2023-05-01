@@ -1,5 +1,5 @@
-from webapi.firebase.fb_db import demo_chat_history,demo
-from webapi.firebase.firebase_dto import ConversationHistory, DemoUserPass, DemoUser
+from webapi.firebase.firebase import demo_chat_history,demo
+from webapi.firebase.dtos import ConversationHistory, DemoUserPass, DemoUser
 import datetime
 import uuid
 import bcrypt

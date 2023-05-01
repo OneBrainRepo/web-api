@@ -8,11 +8,12 @@ THERE WILL BE A DOCUMENT DB WHICH STORES THE SESSIONS
 CREATE A ENTRY OVER THERE WITH USERNAME OR ID AND HOLD XCSFR TOKEN WITH SESSION ID
 """
 from webapi.auth.auth_dto import TokenData, User, UserInDB
-from webapi.sql_db.database import get_session
-from webapi.sql_db.models import Users
+from webapi.db.database import get_session,create_all
+from webapi.db.CRUD import create,read,update, find_first
+from webapi.db.models import Users
 from passlib.context import CryptContext
 from datetime import datetime, timedelta
-from fastapi import HTTPException, Depends, status
+from fastapi import HTTPException, Depends, status, Response
 from jose import JWTError, jwt
 from typing import Annotated
 import os
@@ -31,19 +32,15 @@ def get_password_hash(password):
     return pwd_context.hash(password)
 
 def get_user(username: str):
-    # SEARCH IN DB AND TRY TO FIND USER
-    # NOTE THAT USER NEEDS TO BE MATCHING DTOS UPDATE DTOS LATER
-    # ALSO UPDATE
-    # db AND fake_db IN THE GET_USER AND AUTHENTICATE_USER PART
-    # TAKE IT AUTOMATICALLY FROM DB CONNECTION
-    db = get_session()
-    foundUser = db.query(Users).where(Users.username == username).first()
+    foundUsers = find_first(User,filter_by={"username":username})
+    if foundUsers == None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User is not Found",
+            headers={'WWW-Authenticate': 'Bearer realm="auth_required"'},
+        )
     # return UserInDB(username='example',email='example@example.com',full_name='exampleDOMAIN',disabled=False,hashed_password='hashedExamplePassword')
-    return UserInDB(**foundUser)
-    # EXAMPLE CODE
-    # if username in db:
-    #     user_dict = db[username]
-    #     return UserInDB(**user_dict)
+    return UserInDB(**foundUsers)
 
 def authenticate_user(username: str, password: str):
     user = get_user(username)

@@ -1,6 +1,4 @@
 from fastapi import Query, Request, APIRouter
-from webapi.firebase.fb_db_services import getDemoUser, createDemoUser
-from webapi.firebase.firebase_dto import ConversationHistory, DemoUser
 
 router = APIRouter()
 #Define Demo related routes here
@@ -23,4 +21,4 @@ async def loginEntry(userDTO : DemoUser):
     Return with JWT Key
     Checking which account commit has been made
     """
-    getDemoUser(userDTO=userDTO)
+    pass
