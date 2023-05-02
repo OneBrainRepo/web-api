@@ -1,6 +1,6 @@
 from typing import Any, List, Optional, Type
 from sqlmodel import Field, SQLModel, select
-from webapi.db.CRUD import get_session
+from webapi.db.database import get_session
 from sqlalchemy import asc, desc
 
 """

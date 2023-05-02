@@ -7,15 +7,16 @@ ALSO ADD X-CSRF TOKEN IN THE JWT CLAIMS AS WELL AND SAVE IT IN THE DATABASE UNDE
 THERE WILL BE A DOCUMENT DB WHICH STORES THE SESSIONS
 CREATE A ENTRY OVER THERE WITH USERNAME OR ID AND HOLD XCSFR TOKEN WITH SESSION ID
 """
-from webapi.auth.auth_dto import TokenData, User, UserInDB
-from webapi.db.database import get_session,create_all
-from webapi.db.CRUD import create,read,update, find_first
+from webapi.auth.auth_dto import TokenData, User, UserInDB, SignUpPayload
+from webapi.db.CRUD import find_first
 from webapi.db.models import Users
 from passlib.context import CryptContext
 from datetime import datetime, timedelta
 from fastapi import HTTPException, Depends, status, Response
-from jose import JWTError, jwt
-from typing import Annotated
+from fastapi.security import OAuth2PasswordBearer
+from jose import jwt
+# import jwt
+import uuid
 import os
 
 SECRET_KEY = os.getenv("SECRET_KEY", "09d25e094faa6ca2556c818166b7a9563b93f7099f6f0f4caa6cf63b88e8d3e7")
@@ -23,6 +24,7 @@ ALGORITHM = os.getenv("ALGORITHM","HS256")
 ACCESS_TOKEN_EXPIRE_MINUTES = os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES",30)
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/users/signup")
 
 def verify_password(plain_password, hashed_password):
     return pwd_context.verify(plain_password, hashed_password)
@@ -50,18 +52,23 @@ def authenticate_user(username: str, password: str):
         return False
     return user
 
-
-def create_access_token(data: dict, expires_delta: timedelta | None = None):
-    to_encode = data.copy()
-    if expires_delta:
-        expire = datetime.utcnow() + expires_delta
-    else:
-        expire = datetime.utcnow() + timedelta(minutes=15)
-    to_encode.update({"exp": expire})
+def create_jwt_token(payload: SignUpPayload, expires_delta: timedelta = ACCESS_TOKEN_EXPIRE_MINUTES) -> str:
+    expire = datetime.utcnow() + expires_delta
+    x_csfr = str(uuid.uuid4())
+    to_encode = {"exp": expire, "x-csfr": x_csfr, **payload.dict()}
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
 
-async def get_current_user(token: str):
+def return_decoded_token(jwt_token : str) -> dict:
+    # Check also for x_csft token later on here to protect against csfr attack
+    # x_csfr needs to be stored somewhere preferrably nosql db
+    payload = jwt.decode(jwt_token, SECRET_KEY, algorithms=[ALGORITHM])
+    x_csfr: str = payload.get("x-csfr")
+    if x_csfr is None:
+        return None
+    return payload
+
+async def JWTGuard(token:str = Depends(oauth2_scheme)):
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
@@ -69,23 +76,40 @@ async def get_current_user(token: str):
     )
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        username: str = payload.get("sub")
-        if username is None:
+        x_csfr: str = payload.get("x-csfr")
+        if x_csfr is None:
             raise credentials_exception
-        token_data = TokenData(username=username)
-    except JWTError:
+    except:
         raise credentials_exception
-    # CREATE A FUNCTION TO SEARCH ON DATABASE WHERE USERNAME MATCHES ON DATABASE PART
-    # RETURN A PART THAT COULD BE USED IN THE CLAIMS
-    user = True #get_user(fake_users_db, username=token_data.username)
-    if user is None:
-        raise credentials_exception
-    return user
+    
 
-# USED AS GUARD, DO NOT TOUCH IT
-async def get_current_active_user(
-    current_user: Annotated[User, Depends(get_current_user)]
-):
-    if current_user.disabled:
-        raise HTTPException(status_code=400, detail="Inactive user")
-    return current_user
+# All of the code below is well complicated and not necessary
+
+# async def get_current_user(token: str):
+#     credentials_exception = HTTPException(
+#         status_code=status.HTTP_401_UNAUTHORIZED,
+#         detail="Could not validate credentials",
+#         headers={"WWW-Authenticate": "Bearer"},
+#     )
+#     try:
+#         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+#         username: str = payload.get("sub")
+#         if username is None:
+#             raise credentials_exception
+#         token_data = TokenData(username=username)
+#     except JWTError:
+#         raise credentials_exception
+#     # CREATE A FUNCTION TO SEARCH ON DATABASE WHERE USERNAME MATCHES ON DATABASE PART
+#     # RETURN A PART THAT COULD BE USED IN THE CLAIMS
+#     user = True #get_user(fake_users_db, username=token_data.username)
+#     if user is None:
+#         raise credentials_exception
+#     return user
+
+# # USED AS GUARD, DO NOT TOUCH IT
+# async def get_current_active_user(
+#     current_user: Annotated[User, Depends(get_current_user)]
+# ):
+#     if current_user.disabled:
+#         raise HTTPException(status_code=400, detail="Inactive user")
+#     return current_user

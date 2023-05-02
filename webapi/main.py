@@ -1,7 +1,7 @@
 import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from webapi.routes import login
+from webapi.routes import user_routes
 
 # Cors Settings
 cors_allowed_origins_str = os.getenv("CORS_ALLOWED_ORIGINS", "")
@@ -18,4 +18,4 @@ app.add_middleware(
 
 ## Add super routes
 # Demo Under /demo route
-app.include_router(login.router,tags=["Demo"],prefix="/demo")
+app.include_router(user_routes.router,tags=["Users"],prefix="/users")
