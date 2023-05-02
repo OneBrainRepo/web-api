@@ -24,4 +24,7 @@ We might need to add more user service such as create and update
 Also create demo_user under user services for demo only purpose[DONE]
 
 Routes under one folder, services in their seperate folder, guards under seperate folder(such as auth)
-Also create mongodb folder for mongo connection and remove firebase completely
+Also create mongodb folder for mongo connection and remove firebase completely[MongoDB creation is done]
+Slowly Start integrating chat history and other related stuff to the functions[MongoDB functions]
+
+Final Step - Check for all os.environ variables and update the .env.example file with required parameters
