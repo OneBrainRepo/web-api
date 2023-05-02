@@ -8,7 +8,7 @@ from jose import JWTError, jwt
 
 async def sign_in(payload:SignUpPayload):
     # Check current user in DB
-    user = authenticate_user(username=payload.username,password=payload.password)
+    # Will handle under create_jwt_token
     # Write to a table about X-CSFR token and keep track of it with sessions
     return {"access_token": create_jwt_token(payload=payload), "token_type": "bearer"}
 
@@ -49,11 +49,6 @@ async def demo_login_only(payload:DemoSignupPayload):
     Checks for demo user in database and if yes returns token
     No actual check for X-CSFR token will be implemented
     Needs to be erased after demo
+    Demo Signup is only done via manually
     """
-    foundDemoUser = find_first(Demo,filter_by={"userid":payload.userid})
-    if not foundDemoUser:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="No User found"
-        )
     return {"access_token": demo_jwt_token(payload=payload), "token_type": "bearer"}

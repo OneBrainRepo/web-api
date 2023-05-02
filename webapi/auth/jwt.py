@@ -9,7 +9,7 @@ CREATE A ENTRY OVER THERE WITH USERNAME OR ID AND HOLD XCSFR TOKEN WITH SESSION 
 """
 from webapi.auth.auth_dto import UserInDB, SignUpPayload, DemoSignupPayload
 from webapi.db.CRUD import find_first
-from webapi.db.models import Users
+from webapi.db.models import Users, Demo
 from passlib.context import CryptContext
 from datetime import datetime, timedelta
 from fastapi import HTTPException, Depends, status
@@ -55,7 +55,10 @@ def authenticate_user(username: str, password: str):
 def create_jwt_token(payload: SignUpPayload, expires_delta: timedelta = ACCESS_TOKEN_EXPIRE_MINUTES) -> str:
     expire = datetime.utcnow() + timedelta(minutes=expires_delta)
     x_csfr = str(uuid.uuid4())
-    to_encode = {"exp": expire, "x-csfr": x_csfr, **payload.dict()}
+    user = authenticate_user(username=payload.username,password=payload.password)
+    # ONE BELOW SENDS EVERYTHING IN THE PAYLOAD IT IS USED FOR TESTING
+    # to_encode = {"exp": expire, "x-csfr": x_csfr, **payload.dict()}
+    to_encode = {"exp": expire, "x-csfr": x_csfr,"id":user.id}
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
 
@@ -88,10 +91,19 @@ async def JWTGuard(token:str = Depends(oauth2_scheme)):
 # DEMO ONLY JWT CREATOR
 # ERASE IT AFTER DEMO
 
-def demo_jwt_token(payload: DemoSignupPayload, expires_delta: timedelta = ACCESS_TOKEN_EXPIRE_MINUTES) -> str:
+def demo_jwt_token(payload:DemoSignupPayload, expires_delta: timedelta = ACCESS_TOKEN_EXPIRE_MINUTES) -> str:
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Could not validate credentials",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
     expire = datetime.utcnow() + timedelta(minutes=expires_delta)
     x_csfr = str(uuid.uuid4())
-    to_encode = {"exp": expire, "x-csfr": x_csfr, **payload.dict()}
+    # FIND USER AND ADD ID TO CLAIMS
+    foundDemoUser = find_first(Demo,filter_by={"userid":payload.userid})
+    if foundDemoUser is None:
+        raise credentials_exception
+    to_encode = {"exp": expire, "x-csfr": x_csfr, "userid":foundDemoUser.userid,"id":id}
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
 
