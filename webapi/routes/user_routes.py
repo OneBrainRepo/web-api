@@ -1,6 +1,7 @@
 from fastapi import Query, Request, APIRouter, Depends
-from webapi.users.users import signupService
+from webapi.users.users import sign_in, sign_up
 from webapi.auth.auth_dto import SignUpPayload
+from webapi.users.users_dto import UserSignIn
 from webapi.auth.jwt import JWTGuard
 
 router = APIRouter()
@@ -21,7 +22,12 @@ def getDemoTest()-> dict:
 async def protected_test(current_user: dict[str,str] = Depends(JWTGuard)):
     return {"message": "Protected Hello World"} 
 
+@router.post("/signin")
+async def users_signin(payload: SignUpPayload):
+    return await sign_in(payload)
+
 @router.post("/signup")
-async def users_signup(payload: SignUpPayload):
-    return await signupService(payload)
+async def user_signup(payload:UserSignIn):
+    await sign_up(payload=payload)
+    return {"message": "Registration has been succesful"} 
     

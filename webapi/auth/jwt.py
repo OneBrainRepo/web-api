@@ -7,12 +7,12 @@ ALSO ADD X-CSRF TOKEN IN THE JWT CLAIMS AS WELL AND SAVE IT IN THE DATABASE UNDE
 THERE WILL BE A DOCUMENT DB WHICH STORES THE SESSIONS
 CREATE A ENTRY OVER THERE WITH USERNAME OR ID AND HOLD XCSFR TOKEN WITH SESSION ID
 """
-from webapi.auth.auth_dto import TokenData, User, UserInDB, SignUpPayload
+from webapi.auth.auth_dto import UserInDB, SignUpPayload, DemoSignupPayload
 from webapi.db.CRUD import find_first
 from webapi.db.models import Users
 from passlib.context import CryptContext
 from datetime import datetime, timedelta
-from fastapi import HTTPException, Depends, status, Response
+from fastapi import HTTPException, Depends, status
 from fastapi.security import OAuth2PasswordBearer
 from jose import jwt
 # import jwt
@@ -34,7 +34,7 @@ def get_password_hash(password):
     return pwd_context.hash(password)
 
 def get_user(username: str):
-    foundUsers = find_first(User,filter_by={"username":username})
+    foundUsers = find_first(Users,filter_by={"username":username})
     if foundUsers == None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -42,7 +42,7 @@ def get_user(username: str):
             headers={'WWW-Authenticate': 'Bearer realm="auth_required"'},
         )
     # return UserInDB(username='example',email='example@example.com',full_name='exampleDOMAIN',disabled=False,hashed_password='hashedExamplePassword')
-    return UserInDB(**foundUsers)
+    return foundUsers
 
 def authenticate_user(username: str, password: str):
     user = get_user(username)
@@ -53,7 +53,7 @@ def authenticate_user(username: str, password: str):
     return user
 
 def create_jwt_token(payload: SignUpPayload, expires_delta: timedelta = ACCESS_TOKEN_EXPIRE_MINUTES) -> str:
-    expire = datetime.utcnow() + expires_delta
+    expire = datetime.utcnow() + timedelta(minutes=expires_delta)
     x_csfr = str(uuid.uuid4())
     to_encode = {"exp": expire, "x-csfr": x_csfr, **payload.dict()}
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
@@ -84,6 +84,16 @@ async def JWTGuard(token:str = Depends(oauth2_scheme)):
     
 
 # All of the code below is well complicated and not necessary
+
+# DEMO ONLY JWT CREATOR
+# ERASE IT AFTER DEMO
+
+def demo_jwt_token(payload: DemoSignupPayload, expires_delta: timedelta = ACCESS_TOKEN_EXPIRE_MINUTES) -> str:
+    expire = datetime.utcnow() + timedelta(minutes=expires_delta)
+    x_csfr = str(uuid.uuid4())
+    to_encode = {"exp": expire, "x-csfr": x_csfr, **payload.dict()}
+    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+    return encoded_jwt
 
 # async def get_current_user(token: str):
 #     credentials_exception = HTTPException(

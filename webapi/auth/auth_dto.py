@@ -9,16 +9,19 @@ class TokenData(BaseModel):
     username: str | None = None
 
 
-class User(BaseModel):
+class UserBaseDTO(BaseModel):
     id : int
     username: str
     email: str | None = None
-    full_name: str | None = None
     disabled: bool | None = None
 
-class UserInDB(User):
+class UserInDB(UserBaseDTO):
     hashed_password: str
 
 class SignUpPayload(BaseModel):
     username: str
     password: str
+
+class DemoSignupPayload(BaseModel):
+    userid: str
+    hashed_password: str

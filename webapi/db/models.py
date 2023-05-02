@@ -11,6 +11,9 @@ class Users(SQLModel, table=True):
     username: str
     hashed_password: str
     email: str | None = None
-    full_name: str | None = None
     disabled: bool | None = None
 
+class Demo(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    userid: str
+    hashed_password: str

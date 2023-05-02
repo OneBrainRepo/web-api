@@ -19,3 +19,9 @@ In the pipeline to add to the .env
 
 
 FIREBASE WOULD BE NEGLECTED, IT IS NOT SUITABLE FOR OUR USAGE PURPOSES
+
+We might need to add more user service such as create and update
+Also create demo_user under user services for demo only purpose
+
+Routes under one folder, services in their seperate folder, guards under seperate folder(such as auth)
+Also create mongodb folder for mongo connection and remove firebase completely
