@@ -52,3 +52,12 @@ async def demo_login_only(payload:DemoSignupPayload):
     Demo Signup is only done via manually
     """
     return {"access_token": demo_jwt_token(payload=payload), "token_type": "bearer"}
+
+async def demo_user_crete(payload:DemoSignupPayload):
+    """
+    Demo access only
+    It wouldnt be served on the any routes, just internal access to create users
+    Needs to be erased after the demo
+    """
+    newDemouser = Demo(userid=payload.userid,hashed_password=get_password_hash(payload.hashed_password))
+    create(Demo,newDemouser)

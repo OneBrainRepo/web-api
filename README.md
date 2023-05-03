@@ -22,9 +22,11 @@ FIREBASE WOULD BE NEGLECTED, IT IS NOT SUITABLE FOR OUR USAGE PURPOSES[DONE- WIL
 
 We might need to add more user service such as create and update
 Also create demo_user under user services for demo only purpose[DONE]
+Create_demo_user as a  service but no endpoint[DONE]
 
-Routes under one folder, services in their seperate folder, guards under seperate folder(such as auth)
-Also create mongodb folder for mongo connection and remove firebase completely[MongoDB creation is done]
+Routes under one folder, services in their seperate folder, guards under seperate folder(such as auth)[DONE]
+Also create mongodb folder for mongo connection and remove firebase completely[DONE]
 Slowly Start integrating chat history and other related stuff to the functions[MongoDB functions]
 
 Final Step - Check for all os.environ variables and update the .env.example file with required parameters
+

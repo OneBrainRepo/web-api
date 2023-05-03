@@ -1,6 +1,6 @@
 from fastapi import Query, Request, APIRouter, Depends
-from webapi.users.users import sign_in, sign_up
-from webapi.auth.auth_dto import SignUpPayload
+from webapi.users.users import sign_in, sign_up, demo_login_only
+from webapi.auth.auth_dto import SignUpPayload, DemoSignupPayload
 from webapi.users.users_dto import UserSignIn
 from webapi.auth.jwt import JWTGuard
 

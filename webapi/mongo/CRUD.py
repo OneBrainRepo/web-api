@@ -77,6 +77,21 @@ def read_by_filter_and_order(collection_name: str, order: str = '', **filter_kwa
         return list(CollectionClass.objects(**filter_kwargs).order_by(order))
     return []
 
+def read_last_conversation(collection_name: str, author_id: int) -> tuple[Optional[str], Optional[str]]:
+    """
+    Gets the collection name and author id as an argument and returns last user question and machine answer
+    It can return a tuple or those two values can be extracted for better use
+    Example usage
+    last_question, last_answer = read_last_conversation("ChatHistory", author.id)
+    """
+    CollectionClass = get_collection_class(collection_name)
+    if CollectionClass:
+        latest_chat = CollectionClass.objects(author=author_id).order_by('-createdAt').first()
+        if latest_chat and latest_chat.UserQuestions and latest_chat.MachineAnswers:
+            return latest_chat.UserQuestions[-1], latest_chat.MachineAnswers[-1]
+    return None, None
+
+
 # Update
 def update_one(collection_name: str, instance: Document, **update_kwargs) -> Optional[Document]:
     """
