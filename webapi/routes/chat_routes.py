@@ -1,4 +1,4 @@
-from fastapi import Query, Request, APIRouter, Depends
+from fastapi import Query, Request, APIRouter, Depends, status
 from webapi.conversation.conversations import *
 from webapi.conversation.conversation_dto import *
 from webapi.auth.jwt import JWTGuard
@@ -11,17 +11,30 @@ def protected_test(current_user: dict[str,str] = Depends(JWTGuard)):
 
 @router.get("/last")
 def last_conversation(current_user: dict[str,str] = Depends(JWTGuard)):
-    return get_last_conversation(current_user.get("id"))
+    return get_last_conversation(current_user.id)
 
 @router.get("/all")
 def all_conversation(current_user: dict[str,str] = Depends(JWTGuard)):
-    return get_all_conversation(current_user.get("id"))
+    return get_all_conversation(current_user.id)
 
 @router.get("/specific")
-def specific_conversation(chatid : int ,current_user: dict[str,str] = Depends(JWTGuard)):
-    return get_specific_coversation(userid=current_user.get("id"),chatid=chatid)
+def specific_conversation(chatid : str ,current_user: dict[str,str] = Depends(JWTGuard)):
+    return get_specific_coversation(userid=current_user.id,chatid=chatid)
 
 @router.post("/append")
 def append_to_conversation(payload:ChatHistoryAppend,current_user: dict[str,str] = Depends(JWTGuard)):
-    return append_conversation(payload=payload,userid=current_user.get("id"))
+    return append_conversation(payload=payload,userid=current_user.id)
+
+@router.post("/edit_title")
+def change_title(payload:ChatUpdateTitle,current_user : dict[str,str] = Depends(JWTGuard)):
+    return change_conversation_title(payload=ChatUpdateTitle,userid=current_user.id)
+
+@router.post("/edit_message")
+def change_message(payload:ChatUpdateMessage,current_user : dict[str,str] = Depends(JWTGuard)):
+    raise HTTPException(
+        status_code=status.HTTP_501_NOT_IMPLEMENTED,
+        detail="Not Implemented"
+    )
+    # Return is disabled since this endpoint will be avaliable after demo
+    # return change_user_message(payload=ChatUpdateMessage,userid=current_user.id)
 

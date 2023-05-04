@@ -33,3 +33,13 @@ Final Steps
 - Add deployment configurations
 - Create Docker file for deployment
 - Create docker-compose for both databases(PostgreSQL,MongoDB) and current container
+
+## Things to do
+- Edit message[Semi Done]
+- Change title[Done]
+
+# Ideal Scenario
+
+Active conversation would be kept inside vector db
+History would be kept inside the Document DB
+This way current active conversation can be retrived quickly and faster

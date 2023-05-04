@@ -2,6 +2,17 @@ from pydantic import BaseModel
 from typing import List
 from datetime import datetime
 
+class ChatID(BaseModel):
+    id: str
+
+class ChatUpdateTitle(BaseModel):
+    id:ChatID
+    title: str
+
+class ChatUpdateMessage(BaseModel):
+    id:ChatID
+    Chat_UserQuestion_single: str
+
 class Chat_UserQuestion_single(BaseModel):
     Question: str
 

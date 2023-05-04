@@ -1,5 +1,5 @@
 from webapi.mongo.CRUD import *
-from webapi.conversation.conversation_dto import ChatHistoryByID, ChatHistoryAppend
+from webapi.conversation.conversation_dto import ChatHistoryByID, ChatHistoryAppend, ChatUpdateTitle, ChatUpdateMessage
 from fastapi import HTTPException
 from typing import Any
 
@@ -77,7 +77,7 @@ def get_all_conversation(userid:int):
         raise create_exception_404
     return found_chats
 
-def get_specific_coversation(userid:int,chatid:int):
+def get_specific_coversation(userid:int,chatid:str):
     # Check if user is owner
     try:
         foundChat = read_by_id("ChatHistory",chatid)
@@ -86,3 +86,48 @@ def get_specific_coversation(userid:int,chatid:int):
         raise create_exception_401
     except:
         raise create_exception_401
+
+def change_conversation_title(payload:ChatUpdateTitle,userid:int):
+    try:
+        found_chat = get_specific_coversation(userid=userid,chatid=ChatUpdateTitle.id)
+        updated_chat_history  = update_one(
+        "ChatHistory",
+        found_chat,
+        push__title=ChatUpdateTitle.title,
+        ) 
+        # return the updated data
+        if updated_chat_history is None:
+            raise create_exception_500
+        return {
+            "status": "success",
+            "message": "Title has been changed successfully.",
+            "data": updated_chat_history.to_mongo().to_dict()
+            }
+    except:
+        raise create_exception_500
+
+def change_user_message(payload:ChatUpdateMessage,userid:int):
+    try:
+        found_chat = get_specific_coversation(userid=userid,chatid=ChatUpdateMessage.id)
+        # CALL THE API ENDPOINT TO GENERATE ANSWER AGAIN
+        """
+        LATER ON IT NEEDS TO BE QUEUED VIA REDIS OR SOMETHING TO MAKE A CHANGE THEN UPDATE THE MACHINE ANSWER
+        IN FIRST STAGES CALL API AGAIN AND WAIT FOR THE ANSWER
+        KEEPING IT TILL MVP
+        """
+        # CALL THE API ENDPOINT TO GENERATE ANSWER AGAIN
+        updated_chat_history  = update_one(
+        "ChatHistory",
+        found_chat,
+        push__UserQuestions=ChatUpdateMessage.Chat_UserQuestion_single,
+        ) 
+        # return the updated data
+        if updated_chat_history is None:
+            raise create_exception_500
+        return {
+            "status": "success",
+            "message": "Message has been changed successfully.",
+            "data": updated_chat_history.to_mongo().to_dict()
+            }
+    except:
+        raise create_exception_500
