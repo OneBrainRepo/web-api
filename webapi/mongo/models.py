@@ -8,7 +8,7 @@ class Author(Document):
     id - Holds userid from SQL database to keep track of the user
     """
     name = StringField(required=True)
-    id = IntField(required=True)
+    author_id = IntField(required=True)
 
 class ChatHistory(Document):
     """
@@ -20,6 +20,7 @@ class ChatHistory(Document):
     createdAt - Creation Timestamp defaults for datetime.now
     updatedAt - Update timestamp, defaults for None
     """
+    chat_id = IntField(required=True)
     title = StringField(required=True)
     author = ReferenceField(Author)
     UserQuestions = ListField(StringField())

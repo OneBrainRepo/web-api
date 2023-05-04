@@ -6,18 +6,19 @@ from webapi.users.users_dto import UserSignIn
 from fastapi import HTTPException, status, Depends
 from jose import JWTError, jwt
 
-async def sign_in(payload:SignUpPayload):
+def sign_in(payload:SignUpPayload):
     # Check current user in DB
     # Will handle under create_jwt_token
     # Write to a table about X-CSFR token and keep track of it with sessions
-    return {"access_token": create_jwt_token(payload=payload), "token_type": "bearer"}
+    access_token = create_jwt_token(payload=payload)
+    return {"access_token": access_token, "token_type": "bearer"}
 
-async def sign_up(payload:UserSignIn):
+def sign_up(payload:UserSignIn):
     # Check if required some prequsities
     newUser = Users(username=payload.username,hashed_password=get_password_hash(payload.hashed_password),email=payload.email)
     create(Users,newUser)
 
-async def get_current_user(token:str):
+def get_current_user(token:str):
     credentials_exception = HTTPException(
     status_code=status.HTTP_401_UNAUTHORIZED,
     detail="Could not validate credentials",
@@ -43,7 +44,7 @@ async def get_current_user(token:str):
 
 # DEMO ONLY LOGIN
 # DO NOT USE IT IN PRODUCTION
-async def demo_login_only(payload:DemoSignupPayload):
+def demo_login_only(payload:DemoSignupPayload):
     """
     DEMO ACCESS ONLY
     Checks for demo user in database and if yes returns token
@@ -53,7 +54,7 @@ async def demo_login_only(payload:DemoSignupPayload):
     """
     return {"access_token": demo_jwt_token(payload=payload), "token_type": "bearer"}
 
-async def demo_user_crete(payload:DemoSignupPayload):
+def demo_user_crete(payload:DemoSignupPayload):
     """
     Demo access only
     It wouldnt be served on the any routes, just internal access to create users

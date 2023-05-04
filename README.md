@@ -18,15 +18,18 @@ In the pipeline to add to the .env
 `openssl rand -hex 32`
 
 
-FIREBASE WOULD BE NEGLECTED, IT IS NOT SUITABLE FOR OUR USAGE PURPOSES[DONE- WILL MIGRATE TABLES]
+FIREBASE WOULD BE NEGLECTED, IT IS NOT SUITABLE FOR OUR USAGE PURPOSES[DONE]
 
-We might need to add more user service such as create and update
+We might need to add more user service such as create and update[DONE]
 Also create demo_user under user services for demo only purpose[DONE]
 Create_demo_user as a  service but no endpoint[DONE]
 
 Routes under one folder, services in their seperate folder, guards under seperate folder(such as auth)[DONE]
 Also create mongodb folder for mongo connection and remove firebase completely[DONE]
-Slowly Start integrating chat history and other related stuff to the functions[MongoDB functions]
+Slowly Start integrating chat history and other related stuff to the functions[DONE]
 
-Final Step - Check for all os.environ variables and update the .env.example file with required parameters
-
+Final Steps 
+- Check for all os.environ variables and update the .env.example file with required parameters
+- Add deployment configurations
+- Create Docker file for deployment
+- Create docker-compose for both databases(PostgreSQL,MongoDB) and current container

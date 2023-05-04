@@ -14,6 +14,10 @@ class Chat_MachineAnswer_single(BaseModel):
 class Chat_MachineAnswer(BaseModel):
     UserQuestions: List[Chat_MachineAnswer_single]
 
+class ChatHistoryAppend(BaseModel):
+    UserQuestions:Chat_UserQuestion_single
+    MachineAnswers: Chat_MachineAnswer_single
+
 class AuthorDTO(BaseModel):
     id: int
     name: str

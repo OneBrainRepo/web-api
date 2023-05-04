@@ -2,6 +2,7 @@
 from mongoengine import Document, ReferenceField
 from typing import Optional
 from webapi.mongo.config import connect
+from bson import ObjectId
 
 # Helper function to get a collection class by name
 def get_collection_class(collection_name: str) -> Optional[Document]:
@@ -91,6 +92,15 @@ def read_last_conversation(collection_name: str, author_id: int) -> tuple[Option
             return latest_chat.UserQuestions[-1], latest_chat.MachineAnswers[-1]
     return None, None
 
+def read_by_id(collection_name: str, obj_id: str) -> Optional[Document]:
+    CollectionClass = get_collection_class(collection_name)
+    if CollectionClass:
+        try:
+            return CollectionClass.objects(id=ObjectId(obj_id)).first()
+        except Exception as e:
+            print(f"Error while reading by ID: {e}")
+            return None
+    return None
 
 # Update
 def update_one(collection_name: str, instance: Document, **update_kwargs) -> Optional[Document]:

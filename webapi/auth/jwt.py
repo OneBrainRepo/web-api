@@ -7,7 +7,7 @@ ALSO ADD X-CSRF TOKEN IN THE JWT CLAIMS AS WELL AND SAVE IT IN THE DATABASE UNDE
 THERE WILL BE A DOCUMENT DB WHICH STORES THE SESSIONS
 CREATE A ENTRY OVER THERE WITH USERNAME OR ID AND HOLD XCSFR TOKEN WITH SESSION ID
 """
-from webapi.auth.auth_dto import UserInDB, SignUpPayload, DemoSignupPayload
+from webapi.auth.auth_dto import UserInDB, SignUpPayload, DemoSignupPayload, UserBaseDTO
 from webapi.db.CRUD import find_first
 from webapi.db.models import Users, Demo
 from passlib.context import CryptContext
@@ -50,15 +50,21 @@ def authenticate_user(username: str, password: str):
         return False
     if not verify_password(password, user.hashed_password):
         return False
-    return user
+    return UserBaseDTO(
+        id=user.id,
+        username=user.username,
+        email=user.email,
+        disabled=user.disabled
+    )
 
 def create_jwt_token(payload: SignUpPayload, expires_delta: timedelta = ACCESS_TOKEN_EXPIRE_MINUTES) -> str:
     expire = datetime.utcnow() + timedelta(minutes=expires_delta)
     x_csfr = str(uuid.uuid4())
     user = authenticate_user(username=payload.username,password=payload.password)
+    print(f"User data : {user}")
     # ONE BELOW SENDS EVERYTHING IN THE PAYLOAD IT IS USED FOR TESTING
     # to_encode = {"exp": expire, "x-csfr": x_csfr, **payload.dict()}
-    to_encode = {"exp": expire, "x-csfr": x_csfr,"id":user.id}
+    to_encode = {"exp": expire, "x-csfr": x_csfr,"id":user.id, "user_data": user.dict()}
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
 
@@ -71,7 +77,7 @@ def return_decoded_token(jwt_token : str) -> dict:
         return None
     return payload
 
-async def JWTGuard(token:str = Depends(oauth2_scheme)):
+def JWTGuard(token:str = Depends(oauth2_scheme)):
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
@@ -82,6 +88,14 @@ async def JWTGuard(token:str = Depends(oauth2_scheme)):
         x_csfr: str = payload.get("x-csfr")
         if x_csfr is None:
             raise credentials_exception
+        username: str = payload.get("user_data")["username"]
+        if username is None:
+            raise credentials_exception
+        # find User and return
+        foundUser = get_user(username=username)
+        if foundUser is None:
+            raise credentials_exception
+        return foundUser
     except:
         raise credentials_exception
     

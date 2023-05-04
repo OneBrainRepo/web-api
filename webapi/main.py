@@ -1,7 +1,7 @@
 import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from webapi.routes import user_routes, demo_routes
+from webapi.routes import user_routes, demo_routes, chat_routes
 from webapi.db.database import create_tables
 
 # Cors Settings
@@ -23,4 +23,5 @@ create_tables()
 ## Add super routes
 # Demo Under /demo route
 app.include_router(user_routes.router,tags=["Users"],prefix="/users")
-app.include_router(user_routes.router,tags=["Demo"],prefix="/demo")
+app.include_router(demo_routes.router,tags=["Demo"],prefix="/demo")
+app.include_router(chat_routes.router,tags=["Demo"],prefix="/chat")

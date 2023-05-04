@@ -20,14 +20,16 @@ def getDemoTest()-> dict:
 
 @router.get("/protected-test")
 async def protected_test(current_user: dict[str,str] = Depends(JWTGuard)):
+    print(current_user)
+    print(f"Current user id : {current_user.id}")
     return {"message": "Protected Hello World"} 
 
 @router.post("/signin")
 async def users_signin(payload: SignUpPayload):
-    return await sign_in(payload)
+    return sign_in(payload)
 
 @router.post("/signup")
 async def user_signup(payload:UserSignIn):
-    await sign_up(payload=payload)
+    sign_up(payload=payload)
     return {"message": "Registration has been succesful"} 
     
