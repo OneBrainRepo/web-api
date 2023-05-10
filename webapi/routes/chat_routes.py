@@ -21,6 +21,18 @@ def all_conversation(current_user: dict[str,str] = Depends(JWTGuard)):
 def specific_conversation(chatid : str ,current_user: dict[str,str] = Depends(JWTGuard)):
     return get_specific_coversation(userid=current_user.id,chatid=chatid)
 
+"""
+Below needs to be Kafka initiated
+
+Note : edit_message is currently not implemented yet
+Ideally decided to run Kafka consumer operations in a seperate container therefore here are the new ways
+
+append - Communicates with darwinapi to get the response, produce message called `write_to_db_append`
+edit_title - Sends ok to user and edits in the front end, produce message called `write_to_db_edit_title`
+edit_message - Sends message directly to darwin-api and waits for the response, produce message called `write_to_db_edit_message`
+
+"""
+
 @router.post("/append")
 def append_to_conversation(payload:ChatHistoryAppend,current_user: dict[str,str] = Depends(JWTGuard)):
     return append_conversation(payload=payload,userid=current_user.id)
