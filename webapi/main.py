@@ -24,4 +24,4 @@ create_tables()
 # Demo Under /demo route
 app.include_router(user_routes.router,tags=["Users"],prefix="/users")
 app.include_router(demo_routes.router,tags=["Demo"],prefix="/demo")
-app.include_router(chat_routes.router,tags=["Demo"],prefix="/chat")
+app.include_router(chat_routes.router,tags=["Chat"],prefix="/chat")
