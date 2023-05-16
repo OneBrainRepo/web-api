@@ -1,5 +1,6 @@
 from webapi.mongo.CRUD import *
 from webapi.conversation.conversation_dto import ChatHistoryByID, ChatHistoryAppend, ChatUpdateTitle, ChatUpdateMessage, ChatHistoryCreate
+from webapi.users.users_dto import UserPublic
 from fastapi import HTTPException
 from typing import Any
 
@@ -28,6 +29,12 @@ def findUser(userid:int):
         raise create_exception_404
     return found_author
 
+def covert_to_public_user_format(user_id):
+    return UserPublic(
+        email=user_id.email,
+        id=user_id.id,
+        username=user_id.username
+    )
 
 def get_last_conversation(userid:int) -> (dict[str, str] | dict[str, Any]) :
     """
@@ -42,9 +49,9 @@ def get_last_conversation(userid:int) -> (dict[str, str] | dict[str, Any]) :
 
 def add_conversation(payload:ChatHistoryCreate,userid:int):
     try:
-        print(f"Body params : {ChatHistoryCreate.title}")
-        create("ChatHistory", title=ChatHistoryCreate.title, author=userid, UserQuestions=[ChatHistoryCreate.UserQuestions], MachineAnswers=[ChatHistoryCreate.MachineAnswers])
-        return {"user":userid,"question":ChatHistoryCreate.UserQuestions,"answer":ChatHistoryCreate.MachineAnswers}
+        print(f"Body params : {payload}")
+        create("ChatHistory", title=payload.title, author=userid, UserQuestions=[payload.UserQuestions], MachineAnswers=[payload.MachineAnswers])
+        return {"user":covert_to_public_user_format(userid),"question":payload.UserQuestions,"answer":payload.MachineAnswers}
     except Exception as e:
         print(f"Error on /create endpoint\n{e}")
         raise create_exception_500
@@ -58,8 +65,8 @@ def append_conversation(payload:ChatHistoryAppend,userid:int):
         updated_chat_history  = update_one(
         "ChatHistory",
         found_chat_history,
-        push__UserQuestions=ChatHistoryAppend.UserQuestions,
-        push__MachineAnswers=ChatHistoryAppend.MachineAnswers
+        push__UserQuestions=payload.UserQuestions,
+        push__MachineAnswers=payload.MachineAnswers
         ) 
         # return the updated data
         if updated_chat_history is None:
@@ -92,11 +99,11 @@ def get_specific_coversation(userid:int,chatid:str):
 
 def change_conversation_title(payload:ChatUpdateTitle,userid:int):
     try:
-        found_chat = get_specific_coversation(userid=userid,chatid=ChatUpdateTitle.id)
+        found_chat = get_specific_coversation(userid=userid,chatid=payload.id)
         updated_chat_history  = update_one(
         "ChatHistory",
         found_chat,
-        push__title=ChatUpdateTitle.title,
+        push__title=payload.title,
         ) 
         # return the updated data
         if updated_chat_history is None:
@@ -112,7 +119,7 @@ def change_conversation_title(payload:ChatUpdateTitle,userid:int):
 
 def change_user_message(payload:ChatUpdateMessage,userid:int):
     try:
-        found_chat = get_specific_coversation(userid=userid,chatid=ChatUpdateMessage.id)
+        found_chat = get_specific_coversation(userid=userid,chatid=payload.id)
         # CALL THE API ENDPOINT TO GENERATE ANSWER AGAIN
         """
         LATER ON IT NEEDS TO BE QUEUED VIA REDIS OR SOMETHING TO MAKE A CHANGE THEN UPDATE THE MACHINE ANSWER
@@ -123,7 +130,7 @@ def change_user_message(payload:ChatUpdateMessage,userid:int):
         updated_chat_history  = update_one(
         "ChatHistory",
         found_chat,
-        push__UserQuestions=ChatUpdateMessage.Chat_UserQuestion_single,
+        push__UserQuestions=payload.Chat_UserQuestion_single,
         ) 
         # return the updated data
         if updated_chat_history is None:
