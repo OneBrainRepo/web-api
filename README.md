@@ -43,3 +43,6 @@ Final Steps
 Active conversation would be kept inside vector db
 History would be kept inside the Document DB
 This way current active conversation can be retrived quickly and faster
+
+MONGODB ENDPOINTS HAS SOME ERROR, CHECK IT
+ALSO DTOS HAS PROBLEMS AS WELL

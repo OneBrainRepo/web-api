@@ -158,6 +158,9 @@ demoproject-f7ba1-firebase-adminsdk-rmw9y-ea1e60aa5e.json
 # SQLite DBs
 *.db
 
+# Storage hook for Docker
+/storage
+
 # PyCharm
 #  JetBrains specific template is maintained in a separate JetBrains.gitignore that can
 #  be found at https://github.com/github/gitignore/blob/main/Global/JetBrains.gitignore

@@ -1,5 +1,5 @@
 from webapi.mongo.CRUD import *
-from webapi.conversation.conversation_dto import ChatHistoryByID, ChatHistoryAppend, ChatUpdateTitle, ChatUpdateMessage
+from webapi.conversation.conversation_dto import ChatHistoryByID, ChatHistoryAppend, ChatUpdateTitle, ChatUpdateMessage, ChatHistoryCreate
 from fastapi import HTTPException
 from typing import Any
 
@@ -40,11 +40,13 @@ def get_last_conversation(userid:int) -> (dict[str, str] | dict[str, Any]) :
         return {"last_question":"none","last_answer":"none"}
     return {"last_question":last_question,"last_answer":last_answer}
 
-def add_conversation(payload:ChatHistoryByID,userid:int):
+def add_conversation(payload:ChatHistoryCreate,userid:int):
     try:
-        create("ChatHistory", title=ChatHistoryByID.title, author=userid, UserQuestions=[ChatHistoryByID.UserQuestions], MachineAnswers=[ChatHistoryByID.MachineAnswers])
-        return {"user":userid,"question":ChatHistoryByID.UserQuestions,"answer":ChatHistoryByID.MachineAnswers}
-    except:
+        print(f"Body params : {ChatHistoryCreate.title}")
+        create("ChatHistory", title=ChatHistoryCreate.title, author=userid, UserQuestions=[ChatHistoryCreate.UserQuestions], MachineAnswers=[ChatHistoryCreate.MachineAnswers])
+        return {"user":userid,"question":ChatHistoryCreate.UserQuestions,"answer":ChatHistoryCreate.MachineAnswers}
+    except Exception as e:
+        print(f"Error on /create endpoint\n{e}")
         raise create_exception_500
 
 def append_conversation(payload:ChatHistoryAppend,userid:int):
@@ -67,7 +69,8 @@ def append_conversation(payload:ChatHistoryAppend,userid:int):
             "message": "Conversation appended successfully.",
             "data": updated_chat_history.to_mongo().to_dict()
             }
-    except:
+    except Exception as e:
+        print(f"Error on /create endpoint\n{e}")
         raise create_exception_500
 
 def get_all_conversation(userid:int):
@@ -103,7 +106,8 @@ def change_conversation_title(payload:ChatUpdateTitle,userid:int):
             "message": "Title has been changed successfully.",
             "data": updated_chat_history.to_mongo().to_dict()
             }
-    except:
+    except Exception as e:
+        print(f"Error on /create endpoint\n{e}")
         raise create_exception_500
 
 def change_user_message(payload:ChatUpdateMessage,userid:int):
@@ -129,5 +133,6 @@ def change_user_message(payload:ChatUpdateMessage,userid:int):
             "message": "Message has been changed successfully.",
             "data": updated_chat_history.to_mongo().to_dict()
             }
-    except:
+    except Exception as e:
+        print(f"Error on /create endpoint\n{e}")
         raise create_exception_500

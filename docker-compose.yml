@@ -4,7 +4,7 @@ services:
 
   webapi-core:
     build:
-      context: ./core
+      context: ./
     container_name: webapi_core
     depends_on:
       - postgres_db
@@ -14,9 +14,9 @@ services:
     environment:
       - PYTHONUNBUFFERED=1
     ports:
-      - ${CORE_PORT}:8080
+      - 8080:8080
     volumes:
-      - ./core:/app
+      - ./:/app
     command:
       - uvicorn
       - webapi.main:app
@@ -44,3 +44,15 @@ services:
     environment:
       MONGO_INITDB_ROOT_USERNAME: root
       MONGO_INITDB_ROOT_PASSWORD: example
+    volumes:
+      - ./storage/data/mongodb:/data/db
+    ports:
+      - "27017:27017"
+
+  adminer:
+        image: adminer
+        hostname: adminer
+        container_name: adminer
+        restart: always
+        ports:
+            - 8888:8080

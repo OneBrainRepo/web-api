@@ -48,3 +48,8 @@ class ChatHistoryByID(BaseModel):
     MachineAnswers: Chat_MachineAnswer
     createdAt: datetime
     updatedAt: datetime
+
+class ChatHistoryCreate(BaseModel):
+    title: str
+    UserQuestions: str
+    MachineAnswers: str

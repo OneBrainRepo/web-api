@@ -37,6 +37,10 @@ edit_message - Sends message directly to darwin-api and waits for the response, 
 def append_to_conversation(payload:ChatHistoryAppend,current_user: dict[str,str] = Depends(JWTGuard)):
     return append_conversation(payload=payload,userid=current_user.id)
 
+@router.post("/create")
+def create_conversation(payload:ChatHistoryCreate,current_user: dict[str,str] = Depends(JWTGuard)):
+    return add_conversation(payload=payload,userid=current_user)
+
 @router.post("/edit_title")
 def change_title(payload:ChatUpdateTitle,current_user : dict[str,str] = Depends(JWTGuard)):
     return change_conversation_title(payload=ChatUpdateTitle,userid=current_user.id)
