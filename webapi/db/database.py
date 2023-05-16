@@ -3,11 +3,16 @@ import os
 from sqlalchemy.orm import sessionmaker
 from sqlmodel import Session,SQLModel,create_engine
 
-DB_CONNECTION_STRING = os.getenv("DB_CONNECTION_STRING","sqlite:///./sql_app-v1.db")
-# SQLALCHEMY_DATABASE_URL = "postgresql://user:password@postgresserver/db"
+POSTGRES_USER = os.getenv("POSTGRES_USER","postgres")
+POSTGRES_PASSWD = os.getenv("POSTGRES_PASSWD","postgres")
+
+DB_CONNECTION_STRING = os.getenv(f"DB_CONNECTION_STRING","localhost:5432/db")
+SQLALCHEMY_DATABASE_URL = "sqlite:///./sql_app-v1.db"
+DATABASE_URL = f"postgresql://{POSTGRES_USER}:{POSTGRES_PASSWD}@{DB_CONNECTION_STRING}"
+
 
 engine = create_engine(
-    DB_CONNECTION_STRING, connect_args={"check_same_thread": False}
+    DATABASE_URL, connect_args={"check_same_thread": False}
 )
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 

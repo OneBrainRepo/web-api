@@ -1,0 +1,46 @@
+version: '3.7'
+
+services:
+
+  webapi-core:
+    build:
+      context: ./core
+    container_name: webapi_core
+    depends_on:
+      - postgres_db
+      - mongo_db
+    env_file:
+      - .env
+    environment:
+      - PYTHONUNBUFFERED=1
+    ports:
+      - ${CORE_PORT}:8080
+    volumes:
+      - ./core:/app
+    command:
+      - uvicorn
+      - webapi.main:app
+      - --host
+      - "0.0.0.0"
+      - --port
+      - "8080"
+      - --reload # take away in prod
+    restart: unless-stopped
+
+  postgres_db:
+    image: postgres
+    volumes:
+      - ./storage/data/db:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_DB=postgres # local development only, will make something complicated for prod
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    ports:
+      - "5432:5432"
+
+  mongo_db:
+    image: mongo
+    restart: always
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: example
