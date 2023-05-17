@@ -57,9 +57,6 @@ def append_to_conversation(payload:ChatHistoryAppend,current_user: dict[str,str]
 def create_conversation(payload:ChatHistoryCreate,current_user: dict[str,str] = Depends(JWTGuard)):
     return add_conversation(payload=payload,userid=current_user)
 
-@router.post("/create_test")
-def create_conversation_test(payload:ChatHistoryCreate,current_user: dict[str,str] = Depends(JWTGuard)):
-    return add_test(payload=payload,userid=current_user)
 # Tested OK
 @router.post("/edit_title")
 def change_title(payload:ChatUpdateTitle,current_user : dict[str,str] = Depends(JWTGuard)):

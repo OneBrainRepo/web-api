@@ -21,7 +21,7 @@ class ChatHistory(Document):
     createdAt - Creation Timestamp defaults for datetime.now
     updatedAt - Update timestamp, defaults for None
     """
-    chat_id = StringField(required=True, default=str(uuid4()))
+    # chat_id = StringField(required=True, default=str(uuid4()))
     title = StringField(required=True)
     author = ReferenceField(Author)
     UserQuestions = ListField(StringField())
@@ -31,5 +31,5 @@ class ChatHistory(Document):
 
     def to_mongo(self, *args, **kwargs):
         data = super().to_mongo(*args, **kwargs)
-        data["chat_id"] = str(data["chat_id"])
+        # data["chat_id"] = str(data["chat_id"])
         return data

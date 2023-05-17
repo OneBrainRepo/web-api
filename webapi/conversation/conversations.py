@@ -59,15 +59,11 @@ def get_last_conversation(userid:int) -> (dict[str, str] | dict[str, Any]) :
     return {"last_question":last_question,"last_answer":last_answer}
 
 def add_conversation(payload:ChatHistoryCreate,userid:dict[str,str]):
-    print(f"USER INFO : {userid}\nUser id : {userid.id}")
     author = findOrCreateUser(userid=userid.id,name=userid.username)
-    print(f"TEST\nFound author : {author.to_mongo().to_dict()}\nPayload : {payload}")
     try:
         if author is None:
             author = create("Author", name=userid.username, author_id=userid.id)
-            print(f"Created author : {author}")
 
-        print(f"HERE IT WORKS")
         NewChat = create(
             "ChatHistory", 
             title=payload.title, 
@@ -75,26 +71,24 @@ def add_conversation(payload:ChatHistoryCreate,userid:dict[str,str]):
             UserQuestions=[payload.UserQuestions], 
             MachineAnswers=[payload.MachineAnswers]
         )
-        print(f"New Chat : {NewChat}")
-
-        return {"user":userid,"question":payload.UserQuestions,"answer":payload.MachineAnswers}
+        public_user = covert_to_public_user_format(user_id=userid)
+        return {"user":public_user,"question":payload.UserQuestions,"answer":payload.MachineAnswers,"chatHistory":NewChat.to_mongo().to_dict()}
     except Exception as e:
         print(f"Error type: {type(e)}")
         print(f"Error on /create endpoint\n{e}")
         raise create_exception_500
 
-def add_test(payload:ChatHistoryCreate,userid:dict[str,str]):
-    try:
-        # Later on this needs to be called inside append if there is no conversation avaliable
-        # author = create("Author", name=userid.username, author_id=userid.id)
-        author = findUser(userid=userid.id)
-        print(f"Author : {author.name}")
-        NewChat = create("ChatHistory", title=payload.title, author=author, UserQuestions=[payload.UserQuestions], MachineAnswers=[payload.MachineAnswers])
-        print(f"New Chat : {NewChat}")
-        return author
-    except Exception as e:
-        print(f"Error on /test endpoint\n{e}")
-        raise create_exception_500
+# def add_test(payload:ChatHistoryCreate,userid:dict[str,str]):
+#     try:
+#         # Later on this needs to be called inside append if there is no conversation avaliable
+#         # author = create("Author", name=userid.username, author_id=userid.id)
+#         author = findUser(userid=userid.id)
+#         print(f"Author : {author.name}")
+#         NewChat = create("ChatHistory", title=payload.title, author=author, UserQuestions=[payload.UserQuestions], MachineAnswers=[payload.MachineAnswers])
+#         return author
+#     except Exception as e:
+#         print(f"Error on /test endpoint\n{e}")
+#         raise create_exception_500
 
 def append_conversation_latest(payload:ChatHistoryAppend,userid:int):
     author = findUser(userid=userid)
@@ -178,9 +172,8 @@ def change_conversation_title(payload:ChatUpdateTitle,userid:int):
         if found_chat is None:
             return create_exception_401
         if found_chat.author.author_id != userid:
-            print("Print if true")
             return create_exception_401
-        print(f"Lets check whether it is about with the dict() problem : {found_chat}")
+
         updated_chat_history  = update_one(
         "ChatHistory",
         found_chat,
