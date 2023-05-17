@@ -7,7 +7,7 @@ router = APIRouter()
 
 @router.get("/protected-test")
 def protected_test(current_user: dict[str,str] = Depends(JWTGuard)):
-    return {"message": "Protected Hello World"} 
+    return dict(current_user)
 
 # Tested Ok
 @router.get("/last")
@@ -35,20 +35,32 @@ edit_title - Sends ok to user and edits in the front end, produce message called
 edit_message - Sends message directly to darwin-api and waits for the response, produce message called `write_to_db_edit_message`
 
 """
+# Tested OK
+# This endpoint will be used append to existing conversation
+# Will NOT require document ID
+# To append to the last message aka current message that user is writing
+@router.post("/append_latest")
+def append_to_conversation_latest(payload:ChatHistoryAppendLatest,current_user: dict[str,str] = Depends(JWTGuard)):
+    return append_conversation_latest(payload=payload,userid=current_user.id)
 
+# Tested OK
+# This endpoint will be used to append to specific chat
+# When user wants to continue on some old conversation we can use this
 @router.post("/append")
 def append_to_conversation(payload:ChatHistoryAppend,current_user: dict[str,str] = Depends(JWTGuard)):
     return append_conversation(payload=payload,userid=current_user.id)
 
-# Tested Ok will demolishit, everything about create or append should be at append endpoint
+# Tested Ok
+# Used for opening a new chat window
+# Creates also author if it doesnt exists
 @router.post("/create")
 def create_conversation(payload:ChatHistoryCreate,current_user: dict[str,str] = Depends(JWTGuard)):
     return add_conversation(payload=payload,userid=current_user)
-# Tested OK | DO NOT INVOKE THIS ENDPOINT, PURPOSOLLY CREATED FOR DUPLICATE RECORDS HANDLING. WILL DEMOLISH SOON
-@router.post("/test")
+
+@router.post("/create_test")
 def create_conversation_test(payload:ChatHistoryCreate,current_user: dict[str,str] = Depends(JWTGuard)):
     return add_test(payload=payload,userid=current_user)
-
+# Tested OK
 @router.post("/edit_title")
 def change_title(payload:ChatUpdateTitle,current_user : dict[str,str] = Depends(JWTGuard)):
     return change_conversation_title(payload=payload,userid=current_user.id)

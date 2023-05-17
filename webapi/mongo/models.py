@@ -21,7 +21,7 @@ class ChatHistory(Document):
     createdAt - Creation Timestamp defaults for datetime.now
     updatedAt - Update timestamp, defaults for None
     """
-    chat_id = UUIDField(required=True,default=uuid4)
+    chat_id = StringField(required=True, default=str(uuid4()))
     title = StringField(required=True)
     author = ReferenceField(Author)
     UserQuestions = ListField(StringField())

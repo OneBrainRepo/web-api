@@ -27,10 +27,11 @@ def create(collection_name: str, **kwargs) -> Optional[Document]:
     chat2 = create("ChatHistory", title="Chat 2", author=author, UserQuestions=["Question 2"], MachineAnswers=["Answer 2"])
 
     """
-    conn = connection.get_connection()
+    # conn = connection.get_connection()
     CollectionClass = get_collection_class(collection_name)
     if CollectionClass:
         instance = CollectionClass(**kwargs)
+        print(f"Instance : {instance}\nKwargs : {kwargs}")
         instance.save()
         return instance
     return None

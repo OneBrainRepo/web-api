@@ -4,7 +4,7 @@ from webapi.users.users_dto import UserPublic
 from webapi.mongo.models import Author, ChatHistory
 from fastapi import HTTPException
 from typing import Any
-
+from uuid import uuid4
 
 """
 Define Exceptions
@@ -30,6 +30,13 @@ def findUser(userid:int):
         raise create_exception_404
     return found_author
 
+def findOrCreateUser(userid:int,name:str):
+    found_author = read("Author", author_id=userid)
+    if found_author is not None:
+        return found_author
+    found_author = create("Author", author_id=userid,name=name)
+    return found_author
+
 def covert_to_public_user_format(user_id):
     return UserPublic(
         email=user_id.email,
@@ -52,15 +59,27 @@ def get_last_conversation(userid:int) -> (dict[str, str] | dict[str, Any]) :
     return {"last_question":last_question,"last_answer":last_answer}
 
 def add_conversation(payload:ChatHistoryCreate,userid:dict[str,str]):
+    print(f"USER INFO : {userid}\nUser id : {userid.id}")
+    author = findOrCreateUser(userid=userid.id,name=userid.username)
+    print(f"TEST\nFound author : {author.to_mongo().to_dict()}\nPayload : {payload}")
     try:
-        # Later on this needs to be called inside append if there is no conversation avaliable
-        author = create("Author", name=userid.username, author_id=userid.id)
-        authorRead = findUser(userid=userid)
-        print(f"Author : {authorRead}")
-        NewChat = create("ChatHistory", title=payload.title, author=author, UserQuestions=[payload.UserQuestions], MachineAnswers=[payload.MachineAnswers])
+        if author is None:
+            author = create("Author", name=userid.username, author_id=userid.id)
+            print(f"Created author : {author}")
+
+        print(f"HERE IT WORKS")
+        NewChat = create(
+            "ChatHistory", 
+            title=payload.title, 
+            author=author, 
+            UserQuestions=[payload.UserQuestions], 
+            MachineAnswers=[payload.MachineAnswers]
+        )
         print(f"New Chat : {NewChat}")
+
         return {"user":userid,"question":payload.UserQuestions,"answer":payload.MachineAnswers}
     except Exception as e:
+        print(f"Error type: {type(e)}")
         print(f"Error on /create endpoint\n{e}")
         raise create_exception_500
 
@@ -74,14 +93,15 @@ def add_test(payload:ChatHistoryCreate,userid:dict[str,str]):
         print(f"New Chat : {NewChat}")
         return author
     except Exception as e:
-        print(f"Error on /create endpoint\n{e}")
+        print(f"Error on /test endpoint\n{e}")
         raise create_exception_500
 
-def append_conversation(payload:ChatHistoryAppend,userid:int):
-    chat_histories = read_by_filter_and_order("ChatHistory", order="-createdAt", author=userid)
+def append_conversation_latest(payload:ChatHistoryAppend,userid:int):
+    author = findUser(userid=userid)
+    chat_histories = read_by_filter_and_order("ChatHistory", order="-createdAt", author=author)
     print(f"chat_histories : {chat_histories}")
     if not chat_histories:
-        raise create_exception_404
+        return create_exception_404
     found_chat_history =  chat_histories[0]
     try:
         updated_chat_history  = update_one(
@@ -99,8 +119,34 @@ def append_conversation(payload:ChatHistoryAppend,userid:int):
             "data": updated_chat_history.to_mongo().to_dict()
             }
     except Exception as e:
-        print(f"Error on /create endpoint\n{e}")
+        print(f"Error on /append_latest endpoint\n{e}")
         raise create_exception_500
+
+def append_conversation(payload:ChatHistoryAppend,userid:int):
+    found_chat = read_by_id("ChatHistory",payload.id)
+    if found_chat is None:
+        return create_exception_401
+    if found_chat.author.author_id != userid:
+        return create_exception_401
+    try:
+        updated_chat_history  = update_one(
+        "ChatHistory",
+        found_chat,
+        push__UserQuestions=payload.UserQuestions,
+        push__MachineAnswers=payload.MachineAnswers
+        ) 
+        # return the updated data
+        if updated_chat_history is None:
+            raise create_exception_500
+        return {
+            "status": "success",
+            "message": "Conversation appended successfully.",
+            "data": updated_chat_history.to_mongo().to_dict()
+            }
+    except Exception as e:
+        print(f"Error on /append endpoint\n{e}")
+        raise create_exception_500
+
 
 def get_all_conversation(userid:int):
     author = findUser(userid=userid)
@@ -120,18 +166,25 @@ def get_specific_coversation(userid:int,chatid:str):
         if foundChat.author.author_id == userid:
             # Parse the foundChat
             return foundChat.to_mongo().to_dict()
-        raise create_exception_401
+        return create_exception_401
     except Exception as e:
         print(f"Exception : {e}")
         raise create_exception_401
 
 def change_conversation_title(payload:ChatUpdateTitle,userid:int):
     try:
-        found_chat = get_specific_coversation(userid=userid,chatid=payload.id)
+        # found_chat = get_specific_coversation(userid=userid,chatid=payload.id)
+        found_chat = read_by_id("ChatHistory",payload.id)
+        if found_chat is None:
+            return create_exception_401
+        if found_chat.author.author_id != userid:
+            print("Print if true")
+            return create_exception_401
+        print(f"Lets check whether it is about with the dict() problem : {found_chat}")
         updated_chat_history  = update_one(
         "ChatHistory",
         found_chat,
-        push__title=payload.title,
+        set__title=payload.title,
         ) 
         # return the updated data
         if updated_chat_history is None:
@@ -142,7 +195,7 @@ def change_conversation_title(payload:ChatUpdateTitle,userid:int):
             "data": updated_chat_history.to_mongo().to_dict()
             }
     except Exception as e:
-        print(f"Error on /create endpoint\n{e}")
+        print(f"Error on /edit_title endpoint\n{e}")
         raise create_exception_500
 
 def change_user_message(payload:ChatUpdateMessage,userid:int):
@@ -158,7 +211,7 @@ def change_user_message(payload:ChatUpdateMessage,userid:int):
         updated_chat_history  = update_one(
         "ChatHistory",
         found_chat,
-        push__UserQuestions=payload.Chat_UserQuestion_single,
+        set__UserQuestions=payload.Chat_UserQuestion_single,
         ) 
         # return the updated data
         if updated_chat_history is None:
@@ -169,5 +222,5 @@ def change_user_message(payload:ChatUpdateMessage,userid:int):
             "data": updated_chat_history.to_mongo().to_dict()
             }
     except Exception as e:
-        print(f"Error on /create endpoint\n{e}")
+        print(f"Error on /edit_message endpoint\n{e}")
         raise create_exception_500

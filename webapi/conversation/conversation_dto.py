@@ -6,7 +6,7 @@ class ChatID(BaseModel):
     id: str
 
 class ChatUpdateTitle(BaseModel):
-    id:ChatID
+    id:str
     title: str
 
 class ChatUpdateMessage(BaseModel):
@@ -26,8 +26,13 @@ class Chat_MachineAnswer(BaseModel):
     UserQuestions: List[Chat_MachineAnswer_single]
 
 class ChatHistoryAppend(BaseModel):
-    UserQuestions:Chat_UserQuestion_single
-    MachineAnswers: Chat_MachineAnswer_single
+    id:str
+    UserQuestions:str
+    MachineAnswers: str
+
+class ChatHistoryAppendLatest(BaseModel):
+    UserQuestions:str
+    MachineAnswers: str
 
 class AuthorDTO(BaseModel):
     id: int
