@@ -1,6 +1,7 @@
 from webapi.mongo.CRUD import *
 from webapi.conversation.conversation_dto import ChatHistoryByID, ChatHistoryAppend, ChatUpdateTitle, ChatUpdateMessage, ChatHistoryCreate
 from webapi.users.users_dto import UserPublic
+from webapi.mongo.models import Author, ChatHistory
 from fastapi import HTTPException
 from typing import Any
 
@@ -24,7 +25,7 @@ create_exception_500=HTTPException(
     )
 
 def findUser(userid:int):
-    found_author = read("Author", id=userid)
+    found_author = read("Author", author_id=userid)
     if found_author is None:
         raise create_exception_404
     return found_author
@@ -42,22 +43,43 @@ def get_last_conversation(userid:int) -> (dict[str, str] | dict[str, Any]) :
     No datetime just last message
     Id value should be parsed on the routes via jwt claims
     """
-    last_question, last_answer = read_last_conversation("ChatHistory", userid)
+    # FIND USER ID FIRST
+    foundUser = findUser(userid=userid)
+    last_question, last_answer = read_last_conversation("ChatHistory", foundUser)
+    print(f"Last question : {last_question}\nLast answer : {last_answer}")
     if last_question is None:
         return {"last_question":"none","last_answer":"none"}
     return {"last_question":last_question,"last_answer":last_answer}
 
-def add_conversation(payload:ChatHistoryCreate,userid:int):
+def add_conversation(payload:ChatHistoryCreate,userid:dict[str,str]):
     try:
-        print(f"Body params : {payload}")
-        create("ChatHistory", title=payload.title, author=userid, UserQuestions=[payload.UserQuestions], MachineAnswers=[payload.MachineAnswers])
-        return {"user":covert_to_public_user_format(userid),"question":payload.UserQuestions,"answer":payload.MachineAnswers}
+        # Later on this needs to be called inside append if there is no conversation avaliable
+        author = create("Author", name=userid.username, author_id=userid.id)
+        authorRead = findUser(userid=userid)
+        print(f"Author : {authorRead}")
+        NewChat = create("ChatHistory", title=payload.title, author=author, UserQuestions=[payload.UserQuestions], MachineAnswers=[payload.MachineAnswers])
+        print(f"New Chat : {NewChat}")
+        return {"user":userid,"question":payload.UserQuestions,"answer":payload.MachineAnswers}
+    except Exception as e:
+        print(f"Error on /create endpoint\n{e}")
+        raise create_exception_500
+
+def add_test(payload:ChatHistoryCreate,userid:dict[str,str]):
+    try:
+        # Later on this needs to be called inside append if there is no conversation avaliable
+        # author = create("Author", name=userid.username, author_id=userid.id)
+        author = findUser(userid=userid.id)
+        print(f"Author : {author.name}")
+        NewChat = create("ChatHistory", title=payload.title, author=author, UserQuestions=[payload.UserQuestions], MachineAnswers=[payload.MachineAnswers])
+        print(f"New Chat : {NewChat}")
+        return author
     except Exception as e:
         print(f"Error on /create endpoint\n{e}")
         raise create_exception_500
 
 def append_conversation(payload:ChatHistoryAppend,userid:int):
     chat_histories = read_by_filter_and_order("ChatHistory", order="-createdAt", author=userid)
+    print(f"chat_histories : {chat_histories}")
     if not chat_histories:
         raise create_exception_404
     found_chat_history =  chat_histories[0]
@@ -82,6 +104,7 @@ def append_conversation(payload:ChatHistoryAppend,userid:int):
 
 def get_all_conversation(userid:int):
     author = findUser(userid=userid)
+    print(f"Author found : {author}")
     found_chats = read_many("ChatHistory", author=author)
     if found_chats is None:
         raise create_exception_404
@@ -90,11 +113,16 @@ def get_all_conversation(userid:int):
 def get_specific_coversation(userid:int,chatid:str):
     # Check if user is owner
     try:
+        # print(f"Parsed datas : {userid} and {chatid}")
         foundChat = read_by_id("ChatHistory",chatid)
-        if foundChat.author.id == userid:
-            return foundChat
+        # print(foundChat)
+        # print(f"User ID : {userid}\nDocument Owner ID : {foundChat.author.author_id}\nIF EQ : {userid == foundChat.author.author_id}")
+        if foundChat.author.author_id == userid:
+            # Parse the foundChat
+            return foundChat.to_mongo().to_dict()
         raise create_exception_401
-    except:
+    except Exception as e:
+        print(f"Exception : {e}")
         raise create_exception_401
 
 def change_conversation_title(payload:ChatUpdateTitle,userid:int):

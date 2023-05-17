@@ -1,12 +1,20 @@
 # crud.py
-from mongoengine import Document, ReferenceField
+from mongoengine import Document, ReferenceField, connection
 from typing import Optional
 from webapi.mongo.config import connect
-from bson import ObjectId
+from webapi.mongo.models import Author, ChatHistory
+from bson import ObjectId, json_util
+import pydantic
+pydantic.json.ENCODERS_BY_TYPE[ObjectId]=str
 
 # Helper function to get a collection class by name
 def get_collection_class(collection_name: str) -> Optional[Document]:
-    return globals().get(collection_name.capitalize())
+    # print("Printing global keys to find out which is accessible")
+    # print(globals().keys())
+    # print(f"Get globals {globals().get(collection_name.capitalize())}\nCollection Name as it is {globals().get(collection_name)}")
+    # if globals().get(collection_name.capitalize()) is None:
+    # return globals().get(collection_name.capitalize())
+    return globals().get(collection_name)
 
 # Create
 def create(collection_name: str, **kwargs) -> Optional[Document]:
@@ -19,6 +27,7 @@ def create(collection_name: str, **kwargs) -> Optional[Document]:
     chat2 = create("ChatHistory", title="Chat 2", author=author, UserQuestions=["Question 2"], MachineAnswers=["Answer 2"])
 
     """
+    conn = connection.get_connection()
     CollectionClass = get_collection_class(collection_name)
     if CollectionClass:
         instance = CollectionClass(**kwargs)
@@ -65,29 +74,35 @@ def read_many(collection_name: str, **filter_kwargs) -> list[Optional[Document]]
     found_chats = read_many("ChatHistory", author=author)
     """
     CollectionClass = get_collection_class(collection_name)
-    if CollectionClass:
-        return list(CollectionClass.objects(**filter_kwargs))
-    return []
+    if CollectionClass is None:
+        return None
+    results = CollectionClass.objects(**filter_kwargs)
+    docs = [result.to_mongo().to_dict() for result in results]
+        
+    return docs
 
 def read_by_filter_and_order(collection_name: str, order: str = '', **filter_kwargs) -> list[Optional[Document]]:
     """
     ordered_chats = read_by_filter_and_order("ChatHistory", order="title", author=author)
     """
     CollectionClass = get_collection_class(collection_name)
+    print(f"Collection Class : {CollectionClass}")
     if CollectionClass:
         return list(CollectionClass.objects(**filter_kwargs).order_by(order))
     return []
 
-def read_last_conversation(collection_name: str, author_id: int) -> tuple[Optional[str], Optional[str]]:
+def read_last_conversation(collection_name: str, author) -> tuple[Optional[str], Optional[str]]:
     """
     Gets the collection name and author id as an argument and returns last user question and machine answer
     It can return a tuple or those two values can be extracted for better use
     Example usage
     last_question, last_answer = read_last_conversation("ChatHistory", author.id)
     """
+    print("CHECK THIS")
     CollectionClass = get_collection_class(collection_name)
+    print(f"Collection class name : {CollectionClass}")
     if CollectionClass:
-        latest_chat = CollectionClass.objects(author=author_id).order_by('-createdAt').first()
+        latest_chat = CollectionClass.objects(author=author).order_by('-createdAt').first()
         if latest_chat and latest_chat.UserQuestions and latest_chat.MachineAnswers:
             return latest_chat.UserQuestions[-1], latest_chat.MachineAnswers[-1]
     return None, None

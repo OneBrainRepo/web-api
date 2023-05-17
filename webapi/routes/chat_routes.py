@@ -9,14 +9,17 @@ router = APIRouter()
 def protected_test(current_user: dict[str,str] = Depends(JWTGuard)):
     return {"message": "Protected Hello World"} 
 
+# Tested Ok
 @router.get("/last")
 def last_conversation(current_user: dict[str,str] = Depends(JWTGuard)):
     return get_last_conversation(current_user.id)
 
+# Tested OK
 @router.get("/all")
 def all_conversation(current_user: dict[str,str] = Depends(JWTGuard)):
     return get_all_conversation(current_user.id)
 
+# Tested OK
 @router.get("/specific")
 def specific_conversation(chatid : str ,current_user: dict[str,str] = Depends(JWTGuard)):
     return get_specific_coversation(userid=current_user.id,chatid=chatid)
@@ -37,13 +40,18 @@ edit_message - Sends message directly to darwin-api and waits for the response, 
 def append_to_conversation(payload:ChatHistoryAppend,current_user: dict[str,str] = Depends(JWTGuard)):
     return append_conversation(payload=payload,userid=current_user.id)
 
+# Tested Ok will demolishit, everything about create or append should be at append endpoint
 @router.post("/create")
 def create_conversation(payload:ChatHistoryCreate,current_user: dict[str,str] = Depends(JWTGuard)):
     return add_conversation(payload=payload,userid=current_user)
+# Tested OK | DO NOT INVOKE THIS ENDPOINT, PURPOSOLLY CREATED FOR DUPLICATE RECORDS HANDLING. WILL DEMOLISH SOON
+@router.post("/test")
+def create_conversation_test(payload:ChatHistoryCreate,current_user: dict[str,str] = Depends(JWTGuard)):
+    return add_test(payload=payload,userid=current_user)
 
 @router.post("/edit_title")
 def change_title(payload:ChatUpdateTitle,current_user : dict[str,str] = Depends(JWTGuard)):
-    return change_conversation_title(payload=ChatUpdateTitle,userid=current_user.id)
+    return change_conversation_title(payload=payload,userid=current_user.id)
 
 @router.post("/edit_message")
 def change_message(payload:ChatUpdateMessage,current_user : dict[str,str] = Depends(JWTGuard)):

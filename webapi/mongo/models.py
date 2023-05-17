@@ -1,5 +1,6 @@
-from mongoengine import Document, StringField, ListField, ReferenceField, IntField, DateTimeField
+from mongoengine import Document, StringField, ListField, ReferenceField, IntField, DateTimeField, UUIDField
 from datetime import datetime
+from uuid import uuid4
 
 class Author(Document):
     """
@@ -20,10 +21,15 @@ class ChatHistory(Document):
     createdAt - Creation Timestamp defaults for datetime.now
     updatedAt - Update timestamp, defaults for None
     """
-    chat_id = IntField(required=True)
+    chat_id = UUIDField(required=True,default=uuid4)
     title = StringField(required=True)
     author = ReferenceField(Author)
     UserQuestions = ListField(StringField())
     MachineAnswers = ListField(StringField())
     createdAt = DateTimeField(default=datetime.now)
     updatedAt = DateTimeField(default=None)
+
+    def to_mongo(self, *args, **kwargs):
+        data = super().to_mongo(*args, **kwargs)
+        data["chat_id"] = str(data["chat_id"])
+        return data
