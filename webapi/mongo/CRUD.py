@@ -78,7 +78,23 @@ def read_many(collection_name: str, **filter_kwargs) -> list[Optional[Document]]
     if CollectionClass is None:
         return None
     results = CollectionClass.objects(**filter_kwargs)
+
     docs = [result.to_mongo().to_dict() for result in results]
+        
+    return docs
+
+def read_all_title(collection_name: str, **filter_kwargs) -> list[Optional[Document]]:
+    """
+    found_chats = read_many("ChatHistory", author=author)
+    """
+    CollectionClass = get_collection_class(collection_name)
+    if CollectionClass is None:
+        return None
+    results = CollectionClass.objects(**filter_kwargs)
+
+    
+
+    docs = [{"title" : result.title,"id" : result.id} for result in results]
         
     return docs
 

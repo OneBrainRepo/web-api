@@ -20,6 +20,11 @@ def all_conversation(current_user: dict[str,str] = Depends(JWTGuard)):
     return get_all_conversation(current_user.id)
 
 # Tested OK
+@router.get("/titles")
+def all_conversation(current_user: dict[str,str] = Depends(JWTGuard)):
+    return get_all_titles(current_user.id)   
+
+# Tested OK
 @router.get("/specific")
 def specific_conversation(chatid : str ,current_user: dict[str,str] = Depends(JWTGuard)):
     return get_specific_coversation(userid=current_user.id,chatid=chatid)

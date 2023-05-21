@@ -150,6 +150,15 @@ def get_all_conversation(userid:int):
         raise create_exception_404
     return found_chats
 
+
+def get_all_titles(userid:int):
+    author = findUser(userid=userid)
+    print(f"Author found : {author}")
+    found_chats = read_all_title("ChatHistory", author=author)
+    if found_chats is None:
+        raise create_exception_404
+    return found_chats
+
 def get_specific_coversation(userid:int,chatid:str):
     # Check if user is owner
     try:
