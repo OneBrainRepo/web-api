@@ -94,7 +94,7 @@ def read_all_title(collection_name: str, **filter_kwargs) -> list[Optional[Docum
 
     
 
-    docs = [{"title" : result.title,"id" : result.id} for result in results]
+    docs = [{"title" : result.title,"id" : result.id, "createdat":result.createdAt.isoformat()} for result in results]
         
     return docs
 
