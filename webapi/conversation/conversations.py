@@ -226,3 +226,12 @@ def change_user_message(payload:ChatUpdateMessage,userid:int):
     except Exception as e:
         print(f"Error on /edit_message endpoint\n{e}")
         raise create_exception_500
+
+def delete_user_message(id:str,userid:int):
+    try:
+        found_chat = get_specific_coversation(userid=userid,chatid=id)
+        delete_one(found_chat)
+        return True
+    except Exception as e:
+        print(f"Error on /edit_message endpoint\n{e}")
+        raise create_exception_500

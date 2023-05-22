@@ -1,4 +1,5 @@
 from fastapi import Query, Request, APIRouter, Depends, status
+from fastapi.responses import Response
 from webapi.conversation.conversations import *
 from webapi.conversation.conversation_dto import *
 from webapi.auth.jwt import JWTGuard
@@ -76,3 +77,12 @@ def change_message(payload:ChatUpdateMessage,current_user : dict[str,str] = Depe
     # Return is disabled since this endpoint will be avaliable after demo
     # return change_user_message(payload=ChatUpdateMessage,userid=current_user.id)
 
+@router.get("/delete")
+def delete_message(id:str,current_user : dict[str,str] = Depends(JWTGuard)):
+    delete_user_message(id=id,userid=current_user.id)
+    return Response(status_code=202)
+
+# @router.get("/testdel")
+# def testdel(params:str):
+#     print(f"passed aprams : {params}")
+#     return Response(status_code=201)
