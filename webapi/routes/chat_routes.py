@@ -8,6 +8,7 @@ router = APIRouter()
 
 @router.get("/protected-test")
 def protected_test(current_user: dict[str,str] = Depends(JWTGuard)):
+    print(f"UUID : {current_user.uuid}")
     return dict(current_user)
 
 # Tested Ok

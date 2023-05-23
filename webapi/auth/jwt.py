@@ -52,6 +52,7 @@ def authenticate_user(username: str, password: str):
         return False
     return UserBaseDTO(
         id=user.id,
+        uuid=user.uuid,
         username=user.username,
         email=user.email,
         disabled=user.disabled
