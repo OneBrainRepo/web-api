@@ -174,6 +174,21 @@ def get_specific_coversation(userid:int,chatid:str):
         print(f"Exception : {e}")
         raise create_exception_401
 
+def get_specific_coversation_object(userid:int,chatid:str):
+    # Check if user is owner
+    try:
+        # print(f"Parsed datas : {userid} and {chatid}")
+        foundChat = read_by_id("ChatHistory",chatid)
+        # print(foundChat)
+        # print(f"User ID : {userid}\nDocument Owner ID : {foundChat.author.author_id}\nIF EQ : {userid == foundChat.author.author_id}")
+        if foundChat.author.author_id == userid:
+            # Parse the foundChat
+            return foundChat
+        return create_exception_401
+    except Exception as e:
+        print(f"Exception : {e}")
+        raise create_exception_401
+
 def change_conversation_title(payload:ChatUpdateTitle,userid:int):
     try:
         # found_chat = get_specific_coversation(userid=userid,chatid=payload.id)
@@ -229,7 +244,7 @@ def change_user_message(payload:ChatUpdateMessage,userid:int):
 
 def delete_user_message(id:str,userid:int):
     try:
-        found_chat = get_specific_coversation(userid=userid,chatid=id)
+        found_chat = get_specific_coversation_object(userid=userid,chatid=id)
         delete_one(found_chat)
         return True
     except Exception as e:
