@@ -1,8 +1,8 @@
 from fastapi import Query, Request, APIRouter, Depends
 from fastapi.responses import RedirectResponse
-from webapi.users.users import sign_in, sign_up, demo_login_only
+from webapi.users.users import sign_in, sign_up, demo_login_only, save_connection_request
 from webapi.auth.auth_dto import SignUpPayload, DemoSignupPayload
-from webapi.users.users_dto import UserSignIn
+from webapi.users.users_dto import UserSignIn, ConnectionRequestBase
 from webapi.auth.jwt import JWTGuard
 import os
 
@@ -39,6 +39,8 @@ async def user_signup(payload:UserSignIn):
 
 #Onlizer authenticate
 @router.get("/connect")
-async def user_redirect(connection_id:str,state:int):
+async def user_redirect(payload:ConnectionRequestBase):
+    # connection_id:str,state:int,connection_title:str, error:str
     # Those information is not correct yet, confirm with Onlizer API to ensure the correction of parameters
-    return RedirectResponse(f"{FRONT_END_URL}/chat?connection_id={connection_id}&state={state}")
+    save_connection_request(payload=payload)
+    return RedirectResponse(f"{FRONT_END_URL}/chat?connection_id={payload.connection_id}&state={payload.state}")
