@@ -58,3 +58,8 @@ class ChatHistoryCreate(BaseModel):
     title: str
     UserQuestions: str
     MachineAnswers: str
+
+class MessageWebSocketPayload(BaseModel):
+    token: str
+    title: str
+    UserMessage: str

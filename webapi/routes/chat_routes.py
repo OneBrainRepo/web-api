@@ -1,8 +1,10 @@
-from fastapi import Query, Request, APIRouter, Depends, status
+from fastapi import Query, Request, APIRouter, Depends, status, WebSocket
 from fastapi.responses import Response
 from webapi.conversation.conversations import *
 from webapi.conversation.conversation_dto import *
 from webapi.auth.jwt import JWTGuard
+from starlette.websockets import WebSocketDisconnect
+import ast
 
 router = APIRouter()
 
@@ -60,10 +62,38 @@ def append_to_conversation(payload:ChatHistoryAppend,current_user: dict[str,str]
 # Tested Ok
 # Used for opening a new chat window
 # Creates also author if it doesnt exists
+# Will not be used, will be changed with /message endpoint
 @router.post("/create")
 def create_conversation(payload:ChatHistoryCreate,current_user: dict[str,str] = Depends(JWTGuard)):
     return add_conversation(payload=payload,userid=current_user)
 
+# Token needs to be parsed as parameter
+@router.websocket("/message")
+async def websocket_message(websocket : WebSocket):
+    await websocket.accept()
+    while True:
+        try:
+            # Keep connection open
+            data = await websocket.receive()
+            payload = ast.literal_eval(data.get('text'))
+            parsed_payload = MessageWebSocketPayload.parse_obj(payload)
+            # Extract jwt token
+            found_user = JWTGuard(token=parsed_payload.token)
+            print(found_user)
+            # Send first Acknowledgement
+            await websocket.send_text("Acknowledged")
+            # Send message back to user after that
+            await websocket.send_json({
+                "message":"acknowledged",
+                "data":parsed_payload.json()
+            })
+        except WebSocketDisconnect:
+            print("Client disconnected")
+            break
+        except Exception as e:
+            print(f"Exception at /message websocket\n{e}")
+            await websocket.close(code=1008,reason=f"An error occured during the processing of the data. Error : {e}")
+            return
 # Tested OK
 @router.post("/edit_title")
 def change_title(payload:ChatUpdateTitle,current_user : dict[str,str] = Depends(JWTGuard)):
