@@ -1,8 +1,10 @@
 from fastapi import Query, Request, APIRouter, Depends
+from fastapi.responses import RedirectResponse
 from webapi.users.users import sign_in, sign_up, demo_login_only
 from webapi.auth.auth_dto import SignUpPayload, DemoSignupPayload
 from webapi.users.users_dto import UserSignIn
 from webapi.auth.jwt import JWTGuard
+import os
 
 router = APIRouter()
 #Define Demo related routes here
@@ -12,6 +14,8 @@ Then we define normal login path here as well
 Later on we will change the path which this router is prefixed as
 
 """
+
+FRONT_END_URL = os.getenv("FRONT_END_URL","localhost:3000") 
 
 
 @router.get("/test")
@@ -32,4 +36,9 @@ async def users_signin(payload: SignUpPayload):
 async def user_signup(payload:UserSignIn):
     sign_up(payload=payload)
     return {"message": "Registration has been succesful"} 
-    
+
+#Onlizer authenticate
+@router.get("/connect")
+async def user_redirect(connection_id:str,state:int):
+    # Those information is not correct yet, confirm with Onlizer API to ensure the correction of parameters
+    return RedirectResponse(f"{FRONT_END_URL}/chat?connection_id={connection_id}&state={state}")
