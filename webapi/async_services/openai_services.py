@@ -1,5 +1,5 @@
 import httpx
-from celery_config import celery_app, redis_connection, ChannelNames
+from webapi.async_services.celery_config import celery_app, redis_connection, ChannelNames
 from webapi.async_services.async_dto import AsyncUserQuestionCelery
 import ast
 
@@ -42,6 +42,7 @@ async def single_operation_point(payload:AsyncUserQuestionCelery,channel_name:st
         AND_KEYWORDS = keyword_analyzes_json.get('AND').get('keywords')
         # Write it in the database
         #### CALL NECESSARY GOOGLE ENDPOINT ###
+
         #### ANALYZE THE OUTPUT 
         hypotethical_answer = "Johhny is a man, so far up to our knowledge."
         #### FINE TUNE THE ANSWER

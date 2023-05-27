@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import List
+from typing import List, Optional
 from datetime import datetime
 
 class ChatID(BaseModel):
@@ -62,7 +62,7 @@ class ChatHistoryCreate(BaseModel):
 class MessageWebSocketPayload(BaseModel):
     token: str
     useruui: str
-    title: str
+    title: Optional[str]
     UserMessage: str
     messageType: str
-    messageuuid : str
+    messageuuid : Optional[str]

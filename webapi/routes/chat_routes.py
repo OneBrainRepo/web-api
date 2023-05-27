@@ -7,6 +7,7 @@ from starlette.websockets import WebSocketDisconnect
 from webapi.async_services.celery_config import redis_connection,ChannelNames
 from webapi.async_services.openai_services import single_operation_point
 import ast
+from time import sleep
 
 router = APIRouter()
 
@@ -86,23 +87,25 @@ async def websocket_message(websocket : WebSocket):
             await websocket.send_text("Acknowledged")
             # Define Channel Name
             channel_name = f"{ChannelNames.single_channel_response}_{found_user.uuid}"
+            print(f"Communication channel name : {channel_name}")
             # Parse this channel name to the celery
-            single_operation_point.delay({
-                "question":parsed_payload.UserMessage,
-                "user_uuid": found_user.uuid
-            },channel_name=channel_name)
-            # Subscribe to redis
-            pubsub = redis_connection.pubsub()
-            pubsub.subscribe(channel_name)
+            # single_operation_point.delay({ # DISABLE FROM HERE
+            #     "question":parsed_payload.UserMessage,
+            #     "user_uuid": found_user.uuid
+            # },channel_name=channel_name) # TO HERE
+            # # Subscribe to redis
+            # pubsub = redis_connection.pubsub() # DISABLE THIS FOR NOW
+            # pubsub.subscribe(channel_name) # DISABLE THIS
             # Check the message response in a loop
-            while True:
-                fine_tuned_answer = pubsub.get_message()
+            # while True:
+
+                # fine_tuned_answer = pubsub.get_message()# THIS DISABLE AS WELL
                 # Check the answer later on whether it has valuable answer or gibberish
                 # Send message back to user after that
-                await websocket.send_json({
-                    "message":"acknowledged",
-                    "data":fine_tuned_answer
-                })
+            await websocket.send_json({ # NOTE : IF ABOVE CODE IS DISABLED THIS WILL RUN INDEFINETLY
+                "message":"acknowledged",
+                "data":"fine_tuned_answer"
+            })
         except WebSocketDisconnect:
             print("Client disconnected")
             break
