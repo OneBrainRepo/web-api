@@ -61,5 +61,8 @@ class ChatHistoryCreate(BaseModel):
 
 class MessageWebSocketPayload(BaseModel):
     token: str
+    useruui: str
     title: str
     UserMessage: str
+    messageType: str
+    messageuuid : str

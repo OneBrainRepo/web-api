@@ -4,6 +4,8 @@ from webapi.conversation.conversations import *
 from webapi.conversation.conversation_dto import *
 from webapi.auth.jwt import JWTGuard
 from starlette.websockets import WebSocketDisconnect
+from webapi.async_services.celery_config import redis_connection,ChannelNames
+from webapi.async_services.openai_services import single_operation_point
 import ast
 
 router = APIRouter()
@@ -82,11 +84,25 @@ async def websocket_message(websocket : WebSocket):
             print(found_user)
             # Send first Acknowledgement
             await websocket.send_text("Acknowledged")
-            # Send message back to user after that
-            await websocket.send_json({
-                "message":"acknowledged",
-                "data":parsed_payload.json()
-            })
+            # Define Channel Name
+            channel_name = f"{ChannelNames.single_channel_response}_{found_user.uuid}"
+            # Parse this channel name to the celery
+            single_operation_point.delay({
+                "question":parsed_payload.UserMessage,
+                "user_uuid": found_user.uuid
+            },channel_name=channel_name)
+            # Subscribe to redis
+            pubsub = redis_connection.pubsub()
+            pubsub.subscribe(channel_name)
+            # Check the message response in a loop
+            while True:
+                fine_tuned_answer = pubsub.get_message()
+                # Check the answer later on whether it has valuable answer or gibberish
+                # Send message back to user after that
+                await websocket.send_json({
+                    "message":"acknowledged",
+                    "data":fine_tuned_answer
+                })
         except WebSocketDisconnect:
             print("Client disconnected")
             break
