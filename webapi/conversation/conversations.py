@@ -1,7 +1,8 @@
 from webapi.mongo.CRUD import *
-from webapi.conversation.conversation_dto import ChatHistoryByID, ChatHistoryAppend, ChatUpdateTitle, ChatUpdateMessage, ChatHistoryCreate
+from webapi.conversation.conversation_dto import ChatHistoryByID, ChatHistoryAppend, ChatUpdateTitle, ChatUpdateMessage, ChatHistoryCreate, ChatHistoryAppendToEnd, Chat_MachineAnswer_single
 from webapi.users.users_dto import UserPublic
 from webapi.mongo.models import Author, ChatHistory
+from webapi.toolai.agent import agent_add_ai_messages,agent_add_human_messages,agent_awaitrun_with_messages,agent_awaitrun,generate_title_ai
 from fastapi import HTTPException
 from typing import Any
 from uuid import uuid4
@@ -250,3 +251,31 @@ def delete_user_message(id:str,userid:int):
     except Exception as e:
         print(f"Error on /edit_message endpoint\n{e}")
         raise create_exception_500
+
+async def append_to_response(userid:int,payload:ChatHistoryAppendToEnd):
+    """Appends to the existing message and returns the response"""
+    """Will be used for append message to existing message endpoint"""
+    objectresult = get_specific_coversation_object(userid=userid,chatid=payload.ChatID)
+    userQuestionsList = objectresult['UserQuestions']
+    machineAnswersList = objectresult['MachineAnswers']
+    # Import agent and preload it with this information
+    result = await agent_awaitrun_with_messages(question=payload.Question,HumanMessages=userQuestionsList,AIMessages=machineAnswersList)
+    # Create the payload
+    database_payload = ChatHistoryAppend(id=payload.ChatID,UserQuestions=payload.Question,MachineAnswers=result)
+    """
+    APPEND MESSAGE BACK TO DATABASE UNDER USER QUESTION AND MACHINE ANSWERS
+    """
+    return append_conversation(payload=database_payload,userid=userid)
+
+async def create_new_response(userid:dict[str,str],payload:Chat_MachineAnswer_single):
+    """Creates a new messages and returns the response"""
+    """Will be used for Create new message endpoint"""
+    # Import agent and preload it with this information
+    result = await agent_awaitrun(question=payload.Question)
+    title = generate_title_ai(question=payload.Question)
+    # Create the payload
+    payload = ChatHistoryCreate(title=title,UserQuestions=payload.Question,MachineAnswers=result)
+    """
+    APPEND MESSAGE BACK TO DATABASE UNDER USER QUESTION AND MACHINE ANSWERS
+    """
+    return add_conversation(payload=payload,userid=userid)

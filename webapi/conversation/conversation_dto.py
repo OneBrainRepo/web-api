@@ -66,3 +66,7 @@ class MessageWebSocketPayload(BaseModel):
     UserMessage: str
     messageType: str
     messageuuid : Optional[str]
+
+class ChatHistoryAppendToEnd(BaseModel):
+    ChatID: str
+    Question: str

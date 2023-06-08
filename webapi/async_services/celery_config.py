@@ -2,8 +2,9 @@ from celery import Celery
 from enum import Enum
 import redis
 import os
+import time
 
-REDIS_HOST=os.getenv("REDIS_HOST","localhost")
+REDIS_HOST=os.getenv("REDIS_HOST","redis")
 REDIS_PORT=os.getenv("REDIS_PORT","6379")
 CELERY_BROKER=os.getenv("CELERY_BROKER","redis://localhost")
 
@@ -20,3 +21,15 @@ class ChannelNames(Enum):
     fine_tuned_answer = "FINE_TUNING_DONE"
     keywords_extraction = "KEYWORDS_RESP"
     single_channel_response = "SINGLE_CHANNEL_RESP"
+
+
+def redis_retrive_message_from_channel(rpub):
+   message_redis = None
+   while message_redis is None or (isinstance(message_redis, dict) and message_redis.get('type') != 'message'):
+        message_redis = rpub.get_message()
+        if message_redis and isinstance(message_redis, dict) and message_redis.get('type') == 'message':
+            message_redis = message_redis.get('data').decode('utf-8')  # decoding byte string to original string
+            print(f"Current message data : {message_redis}")
+            return message_redis
+        else:
+            time.sleep(1)  # sleep for some time before checking again 
