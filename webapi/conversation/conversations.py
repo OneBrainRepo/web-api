@@ -3,6 +3,7 @@ from webapi.conversation.conversation_dto import ChatHistoryByID, ChatHistoryApp
 from webapi.users.users_dto import UserPublic
 from webapi.mongo.models import Author, ChatHistory
 from webapi.toolai.agent import agent_add_ai_messages,agent_add_human_messages,agent_awaitrun_with_messages,agent_awaitrun,generate_title_ai
+from webapi.users.users import allow_block_limit_for_message, increment_message_usage
 from fastapi import HTTPException
 from typing import Any
 from uuid import uuid4
@@ -24,6 +25,15 @@ create_exception_500=HTTPException(
         status_code=500,
         detail="Internal Server Error"
     )
+
+def checkUserMessageAllowance(userid:int):
+    allowance_message = allow_block_limit_for_message(userid=userid)
+    DEMO_TRIAL_MESSAGE_END = """
+    Thank you for trying the demo. Currently you have reached the message limit supported by the demo. It will be good to have your feedback as well
+    Feel free to write to us directly for getting more information about current development stage or any other things.
+    """
+    if allowance_message:
+        return {"message":DEMO_TRIAL_MESSAGE_END}
 
 def findUser(userid:int):
     found_author = read("Author", author_id=userid)
@@ -282,29 +292,39 @@ def delete_user_message(id:str,userid:int):
 async def append_to_response(userid:int,payload:ChatHistoryAppendToEnd):
     """Appends to the existing message and returns the response"""
     """Will be used for append message to existing message endpoint"""
-    objectresult = get_specific_coversation_object(userid=userid,chatid=payload.ChatID)
-    userQuestionsList = objectresult['UserQuestions']
-    machineAnswersList = objectresult['MachineAnswers']
-    # Import agent and preload it with this information
-    result = await agent_awaitrun_with_messages(question=payload.Question,HumanMessages=userQuestionsList,AIMessages=machineAnswersList)
+    try:
+        objectresult = get_specific_coversation_object(userid=userid,chatid=payload.ChatID)
+        userQuestionsList = objectresult['UserQuestions']
+        machineAnswersList = objectresult['MachineAnswers']
+        # Import agent and preload it with this information
+        result = await agent_awaitrun_with_messages(question=payload.Question,HumanMessages=userQuestionsList,AIMessages=machineAnswersList)
+    except Exception as e:
+        print(f"Exception at Append : {e}")
+        raise create_exception_500
     # Create the payload
     database_payload = ChatHistoryAppend(id=payload.ChatID,UserQuestions=payload.Question,MachineAnswers=result)
     """
     APPEND MESSAGE BACK TO DATABASE UNDER USER QUESTION AND MACHINE ANSWERS
     """
+    increment_message_usage(userid=userid)
     return append_conversation(payload=database_payload,userid=userid)
 
 async def create_new_response(userid:dict[str,str],payload:Chat_MachineAnswer_single):
     """Creates a new messages and returns the response"""
     """Will be used for Create new message endpoint"""
     # Import agent and preload it with this information
-    result = await agent_awaitrun(question=payload.Question)
-    title = generate_title_ai(question=payload.Question)
+    try:
+        result = await agent_awaitrun(question=payload.Question)
+        title = generate_title_ai(question=payload.Question)
+    except Exception as e:
+        print(f"Exception on Create : {e}")
+        raise create_exception_500
     # Create the payload
     payload = ChatHistoryCreate(title=title,UserQuestions=payload.Question,MachineAnswers=result)
     """
     APPEND MESSAGE BACK TO DATABASE UNDER USER QUESTION AND MACHINE ANSWERS
     """
+    increment_message_usage(userid=userid.id)
     return add_conversation(payload=payload,userid=userid)
 
 async def regenerate_response(messageIdx:int,userid:int,chatid:str):

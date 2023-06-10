@@ -6,6 +6,7 @@ from webapi.auth.jwt import JWTGuard
 from starlette.websockets import WebSocketDisconnect
 from webapi.async_services.celery_config import redis_connection,ChannelNames, redis_retrive_message_from_channel
 from webapi.async_services.http_services import single_operation_point
+from webapi.users.users import allow_block_limit_for_message
 import ast
 import json
 from time import sleep
@@ -42,11 +43,16 @@ def specific_conversation(chatid : str ,current_user: dict[str,str] = Depends(JW
 # Creates also author if it doesnt exists
 @router.post("/create")
 async def create_conversation(payload:Chat_MachineAnswer_single,current_user: dict[str,str] = Depends(JWTGuard)):
-    # return add_conversation(payload=payload,userid=current_user)
+    limit_reached = checkUserMessageAllowance(userid=current_user.id)
+    if limit_reached:
+        return limit_reached
     return await create_new_response(payload=payload,userid=current_user)
 
 @router.post("/append")
 async def append_to_conversation(payload:ChatHistoryAppendToEnd,current_user: dict[str,str] = Depends(JWTGuard)):
+    limit_reached = checkUserMessageAllowance(userid=current_user.id)
+    if limit_reached:
+        return limit_reached
     return await append_to_response(payload=payload,userid=current_user.id)
 
 # Tested OK

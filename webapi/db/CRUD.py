@@ -46,11 +46,12 @@ if delete(Book, 1):
 
 """
 
-def create(table: Type[SQLModel], item: SQLModel) -> bool:
+def create(table: Type[SQLModel], item: SQLModel) -> SQLModel:
     with get_session() as db:
         db.add(item)
         db.commit()
-    return True
+        db.refresh(item)
+    return item
 
 def read(table: Type[SQLModel], filter_by: Optional[dict] = None) -> List[SQLModel]:
     with get_session() as db:

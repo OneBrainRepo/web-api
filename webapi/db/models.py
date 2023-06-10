@@ -20,6 +20,12 @@ class Demo(SQLModel, table=True):
     userid: str
     hashed_password: str
 
+class MessageCounter(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    user_id: Optional[int] = Field(default=None, foreign_key="users.id")
+    max_message: int = Field(default=100)
+    current_amount : int = Field(default=0)
+
 class ConnectionRequests(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     user_id: Optional[int] = Field(default=None, foreign_key="users.id")

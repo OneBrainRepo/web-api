@@ -1,6 +1,6 @@
 from fastapi import Query, Request, APIRouter, Depends
 from fastapi.responses import RedirectResponse
-from webapi.users.users import sign_in, sign_up, demo_login_only, save_connection_request
+from webapi.users.users import sign_in, sign_up, demo_login_only, save_connection_request, check_total_message_left, increment_message_usage
 from webapi.auth.auth_dto import SignUpPayload, DemoSignupPayload
 from webapi.users.users_dto import UserSignIn, ConnectionRequestBase
 from webapi.auth.jwt import JWTGuard
@@ -24,7 +24,6 @@ def getDemoTest()-> dict:
 
 @router.get("/protected-test")
 async def protected_test(current_user: dict[str,str] = Depends(JWTGuard)):
-    print(current_user)
     print(f"Current user id : {current_user.id}")
     return {"message": "Protected Hello World"} 
 
@@ -36,6 +35,16 @@ async def users_signin(payload: SignUpPayload):
 async def user_signup(payload:UserSignIn):
     sign_up(payload=payload)
     return {"message": "Registration has been succesful"} 
+
+@router.get("/messagecount")
+def getTotalMessageleft(current_user: dict[str,str] = Depends(JWTGuard)):
+    print(f"Current user id : {current_user.id}")
+    return check_total_message_left(userid=current_user.id)
+
+@router.get("/messagecountincr")
+def getTotalMessageleft(current_user: dict[str,str] = Depends(JWTGuard)):
+    print(f"Current user id : {current_user.id}")
+    return increment_message_usage(userid=current_user.id,incrementation=5)
 
 #Onlizer authenticate
 @router.get("/connect")
