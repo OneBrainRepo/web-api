@@ -30,6 +30,15 @@ class ChatHistoryAppend(BaseModel):
     UserQuestions:str
     MachineAnswers: str
 
+class ChatUpdateMessageByIndex(BaseModel):
+    id:ChatID
+    Chat_UserQuestion_single: str
+    Chat_MachineAnswer_single: str
+
+class ChatUpdateMessageListByIndex(BaseModel):
+    id:ChatID
+    Chat_UserQuestionList: list[str]
+    Chat_MachineAnswerList: list[str]
 class ChatHistoryAppendLatest(BaseModel):
     UserQuestions:str
     MachineAnswers: str

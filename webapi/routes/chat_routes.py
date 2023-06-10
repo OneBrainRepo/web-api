@@ -43,7 +43,7 @@ def specific_conversation(chatid : str ,current_user: dict[str,str] = Depends(JW
 @router.post("/create")
 async def create_conversation(payload:Chat_MachineAnswer_single,current_user: dict[str,str] = Depends(JWTGuard)):
     # return add_conversation(payload=payload,userid=current_user)
-    return await create_new_response(message=payload.Question,userid=current_user)
+    return await create_new_response(payload=payload,userid=current_user)
 
 @router.post("/append")
 async def append_to_conversation(payload:ChatHistoryAppendToEnd,current_user: dict[str,str] = Depends(JWTGuard)):

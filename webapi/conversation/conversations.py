@@ -1,5 +1,5 @@
 from webapi.mongo.CRUD import *
-from webapi.conversation.conversation_dto import ChatHistoryByID, ChatHistoryAppend, ChatUpdateTitle, ChatUpdateMessage, ChatHistoryCreate, ChatHistoryAppendToEnd, Chat_MachineAnswer_single
+from webapi.conversation.conversation_dto import ChatHistoryByID, ChatHistoryAppend, ChatUpdateTitle, ChatUpdateMessage, ChatHistoryCreate, ChatHistoryAppendToEnd, Chat_MachineAnswer_single, ChatUpdateMessageByIndex, ChatUpdateMessageListByIndex
 from webapi.users.users_dto import UserPublic
 from webapi.mongo.models import Author, ChatHistory
 from webapi.toolai.agent import agent_add_ai_messages,agent_add_human_messages,agent_awaitrun_with_messages,agent_awaitrun,generate_title_ai
@@ -216,6 +216,33 @@ def change_conversation_title(payload:ChatUpdateTitle,userid:int):
         print(f"Error on /edit_title endpoint\n{e}")
         raise create_exception_500
 
+def change_specific_message_by_index(payload:ChatUpdateMessageListByIndex,userid:int):
+    try:
+        # found_chat = get_specific_coversation(userid=userid,chatid=payload.id)
+        found_chat = read_by_id("ChatHistory",payload.id)
+        if found_chat is None:
+            return create_exception_401
+        if found_chat.author.author_id != userid:
+            return create_exception_401
+
+        updated_chat_history  = update_one(
+        "ChatHistory",
+        found_chat,
+        set__UserQuestions=payload.Chat_UserQuestionList,
+        set__MachineAnswers=payload.Chat_MachineAnswerList
+        ) 
+        # return the updated data
+        if updated_chat_history is None:
+            raise create_exception_500
+        return {
+            "status": "success",
+            "message": "Title has been changed successfully.",
+            "data": updated_chat_history.to_mongo().to_dict()
+            }
+    except Exception as e:
+        print(f"Error on /edit_title endpoint\n{e}")
+        raise create_exception_500
+
 def change_user_message(payload:ChatUpdateMessage,userid:int):
     try:
         found_chat = get_specific_coversation(userid=userid,chatid=payload.id)
@@ -279,3 +306,22 @@ async def create_new_response(userid:dict[str,str],payload:Chat_MachineAnswer_si
     APPEND MESSAGE BACK TO DATABASE UNDER USER QUESTION AND MACHINE ANSWERS
     """
     return add_conversation(payload=payload,userid=userid)
+
+async def regenerate_response(messageIdx:int,userid:int,chatid:str):
+    """Hypotectically if the message is empty, check for last message to regenerate response, if message index has been given then regenerate the response according to the given index. If index is not given check the last answer and regenerate if it is missing"""
+    objectconversation = get_specific_coversation_object(userid=userid,chatid=chatid)
+    userQuestionsList = objectconversation['UserQuestions']
+    machineAnswersList = objectconversation['MachineAnswers']
+    if not messageIdx:
+        # Check the length difference
+        if len(userQuestionsList) > len(machineAnswersList):
+            # use the last question as 
+            result = await agent_awaitrun_with_messages(question=userQuestionsList[-1],HumanMessages=userQuestionsList,AIMessages=machineAnswersList)
+            machineAnswersList.append(result)
+            crafted_payload = ChatUpdateMessageListByIndex(id=chatid,Chat_MachineAnswerList=machineAnswersList,Chat_UserQuestionList=userQuestionsList)
+            return change_specific_message_by_index(payload=crafted_payload,userid=userid)
+    
+    result = await agent_awaitrun_with_messages(question=userQuestionsList[messageIdx],HumanMessages=userQuestionsList[:-messageIdx],AIMessages=machineAnswersList[:-messageIdx])
+    machineAnswersList[messageIdx] = result
+    crafted_payload = ChatUpdateMessageListByIndex(id=chatid,Chat_MachineAnswerList=machineAnswersList,Chat_UserQuestionList=userQuestionsList)
+    return change_specific_message_by_index(payload=crafted_payload,userid=userid)
