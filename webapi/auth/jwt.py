@@ -62,6 +62,12 @@ def create_jwt_token(payload: SignUpPayload, expires_delta: timedelta = ACCESS_T
     expire = datetime.utcnow() + timedelta(minutes=expires_delta)
     x_csfr = str(uuid.uuid4())
     user = authenticate_user(username=payload.username,password=payload.password)
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User is not Found",
+            headers={'WWW-Authenticate': 'Bearer realm="auth_required"'},
+        )
     print(f"User data : {user}")
     # ONE BELOW SENDS EVERYTHING IN THE PAYLOAD IT IS USED FOR TESTING
     # to_encode = {"exp": expire, "x-csfr": x_csfr, **payload.dict()}
