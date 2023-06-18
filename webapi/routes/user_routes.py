@@ -1,9 +1,10 @@
 from fastapi import Query, Request, APIRouter, Depends
 from fastapi.responses import RedirectResponse
-from webapi.users.users import sign_in, sign_up, demo_login_only, save_connection_request, check_total_message_left, increment_message_usage
+from webapi.users.users import sign_in, sign_up, demo_login_only, save_connection_request, check_total_message_left, increment_message_usage, find_connection_id
 from webapi.auth.auth_dto import SignUpPayload, DemoSignupPayload
 from webapi.users.users_dto import UserSignIn, ConnectionRequestBase
 from webapi.auth.jwt import JWTGuard
+from typing import Optional
 import os
 
 router = APIRouter()
@@ -48,8 +49,17 @@ def getTotalMessageleft(current_user: dict[str,str] = Depends(JWTGuard)):
 
 #Onlizer authenticate
 @router.get("/connect")
-async def user_redirect(payload:ConnectionRequestBase):
+def user_redirect(connection_id: str,state: int,connection_title : Optional[str] = None,error: Optional[str] = None):
     # connection_id:str,state:int,connection_title:str, error:str
     # Those information is not correct yet, confirm with Onlizer API to ensure the correction of parameters
+    payload = ConnectionRequestBase(connection_id=connection_id,connection_title=connection_title,state=state,error=error)
+    useremail = payload.connection_id.split('_')[-1]
     save_connection_request(payload=payload)
-    return RedirectResponse(f"{FRONT_END_URL}/chat?connection_id={payload.connection_id}&state={payload.state}")
+    return RedirectResponse(f"{FRONT_END_URL}/selectapp?email={useremail}&state={payload.state}")
+
+#Onlizer check
+@router.get("/check")
+def onlizer_check(connection_id: str,state: int,connection_title : Optional[str] = None,error: Optional[str] = None,current_user: dict[str,str] = Depends(JWTGuard)):
+    foundUser = find_connection_id(userid=current_user.id)
+    print(f"Found user : {foundUser}\nConnection ID {connection_id}")
+    return foundUser

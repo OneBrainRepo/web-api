@@ -1,7 +1,7 @@
 from webapi.auth.auth_dto import SignUpPayload, TokenData, DemoSignupPayload
 from webapi.auth.jwt import authenticate_user, create_jwt_token, return_decoded_token, get_user, get_password_hash, demo_jwt_token
 from webapi.db.CRUD import find_first, create, update
-from webapi.db.models import Users, Demo, ConnectionRequests, MessageCounter
+from webapi.db.models import Users, Demo, ConnectionRequests, MessageCounter, ConnectionRequests
 from webapi.users.users_dto import UserSignIn, ConnectionRequestBase
 from fastapi import HTTPException, status, Depends
 from jose import JWTError, jwt
@@ -25,7 +25,9 @@ def sign_up(payload:UserSignIn):
 
 def save_connection_request(payload:ConnectionRequestBase):
     # Save connection request to db if it matches with email in the user table
-    foundUser = find_user_by_email(payload.connection_id) # Connection ID is email
+    useremail = payload.connection_id.split('_')[-1]
+    print(f"User : {useremail}")
+    foundUser = find_user_by_email(useremail) # Connection ID is email
     if not foundUser:
         raise HTTPException(404,"User is not found")
     newConnection = ConnectionRequests(connection_id=payload.connection_id,connection_title=payload.connection_title,state=payload.state,user_id=foundUser.id)
@@ -90,6 +92,13 @@ def increment_message_usage(userid:int,incrementation:int=1):
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="Server error on Message Counter",
             )
+
+def find_connection_id(userid:int):
+    foundConnectionId = find_first(ConnectionRequests,filter_by={"user_id":userid})
+    print(f"DEBUGGING ONLY FOUND USER : {foundConnectionId}")
+    if foundConnectionId:
+        return foundConnectionId
+    raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,detail="User does not have any connection ID. Please connect with OAuth application to provide this information")
 # DO NOT DEFINE ANY GUARDS HERE
 # ONLY SERVICES
 # GUARDS ARE DEFINED EITHER AS MIDDLEWARE OR IN THE AUTH MODULE

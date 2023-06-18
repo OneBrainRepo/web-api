@@ -3,10 +3,11 @@ from webapi.conversation.conversation_dto import ChatHistoryByID, ChatHistoryApp
 from webapi.users.users_dto import UserPublic
 from webapi.mongo.models import Author, ChatHistory
 from webapi.toolai.agent import agent_add_ai_messages,agent_add_human_messages,agent_awaitrun_with_messages,agent_awaitrun,generate_title_ai
-from webapi.users.users import allow_block_limit_for_message, increment_message_usage
+from webapi.users.users import allow_block_limit_for_message, increment_message_usage, find_connection_id
 from fastapi import HTTPException
 from typing import Any
 from uuid import uuid4
+import re
 
 """
 Define Exceptions
@@ -54,6 +55,9 @@ def covert_to_public_user_format(user_id):
         id=user_id.id,
         username=user_id.username
     )
+
+def sanitize(input_string:str):
+    return re.sub(r'[^A-Za-z0-9 _-]+', '', input_string)
 
 def get_last_conversation(userid:int) -> (dict[str, str] | dict[str, Any]) :
     """
@@ -296,8 +300,12 @@ async def append_to_response(userid:int,payload:ChatHistoryAppendToEnd):
         objectresult = get_specific_coversation_object(userid=userid,chatid=payload.ChatID)
         userQuestionsList = objectresult['UserQuestions']
         machineAnswersList = objectresult['MachineAnswers']
+        # Craft the Question payload
+        foundConnectionID = find_connection_id(userid=userid)
+        user_question_sanitized = sanitize(payload.Question)
+        crafted_user_question_with_connectionid = user_question_sanitized + f" . My connection_id : {foundConnectionID.connection_id}"
         # Import agent and preload it with this information
-        result = await agent_awaitrun_with_messages(question=payload.Question,HumanMessages=userQuestionsList,AIMessages=machineAnswersList)
+        result = await agent_awaitrun_with_messages(question=crafted_user_question_with_connectionid,HumanMessages=userQuestionsList,AIMessages=machineAnswersList)
     except Exception as e:
         print(f"Exception at Append : {e}")
         raise create_exception_500
@@ -313,14 +321,19 @@ async def create_new_response(userid:dict[str,str],payload:Chat_MachineAnswer_si
     """Creates a new messages and returns the response"""
     """Will be used for Create new message endpoint"""
     # Import agent and preload it with this information
+    # Find user from onlizer connect
     try:
-        result = await agent_awaitrun(question=payload.Question)
-        title = generate_title_ai(question=payload.Question)
+        foundConnectionID = find_connection_id(userid=userid.id)
+        user_question_sanitized = sanitize(payload.Question)
+        # Will be using crafted user question to handle it 
+        crafted_user_question_with_connectionid = user_question_sanitized + f" . My connection_id : {foundConnectionID.connection_id}"
+        result = await agent_awaitrun(question=crafted_user_question_with_connectionid)
+        title = generate_title_ai(question=user_question_sanitized)
     except Exception as e:
         print(f"Exception on Create : {e}")
         raise create_exception_500
     # Create the payload
-    payload = ChatHistoryCreate(title=title,UserQuestions=payload.Question,MachineAnswers=result)
+    payload = ChatHistoryCreate(title=title,UserQuestions=user_question_sanitized,MachineAnswers=result)
     """
     APPEND MESSAGE BACK TO DATABASE UNDER USER QUESTION AND MACHINE ANSWERS
     """

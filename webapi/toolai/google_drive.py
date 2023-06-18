@@ -3,9 +3,22 @@ import json
 from typing import List
 from langchain.docstore.document import Document
 from langchain.text_splitter import CharacterTextSplitter
-from webapi.toolai.llm_functions import LongTextSplitter,chunk_size,split_text_into_chunks
+import requests
 
-async def invoke_endpoint_async(url:str,body:dict={},headers:dict={},req_type : str="GET"):
+class LongTextSplitter:
+    def __init__(self, chunk_size=600, chunk_overlap=0):
+        self.chunk_size = chunk_size
+        self.chunk_overlap = chunk_overlap
+
+    def split_text(self, text):
+        return [text[i:i+self.chunk_size] for i in range(0, len(text), self.chunk_size)]
+
+def split_text_into_chunks(text, chunk_size):
+    return [text[i:i+chunk_size] for i in range(0, len(text), chunk_size)]
+
+chunk_size = 600
+
+async def invoke_endpoint_async(url:str,body:dict={},headers:dict={},req_type : str="GET",timeout:int = 30):
     """
     Get URL, Request Type, Headers, Body
     URL - url = str URL address of the endpoint
@@ -19,9 +32,9 @@ async def invoke_endpoint_async(url:str,body:dict={},headers:dict={},req_type : 
     async with httpx.AsyncClient() as client:
         try:
             if req_type == "POST":
-                return await client.post(url=url,json=body,headers=headers)
+                return await client.post(url=url,json=body,headers=headers,timeout=timeout)
             elif req_type == "GET":
-                return await client.get(url=url,params=body,headers=headers)
+                return await client.get(url=url,params=body,headers=headers,timeout=timeout)
             else:
                 return None
         except Exception as e:
@@ -35,7 +48,59 @@ ONLIZER API WILL HAVE BASE TEMPLATE FOR NOW
 NO AND OPERATOR OR OTHER THINGS
 ONLY ONE PARSER
 """
-async def google_drive_search(keywords : List[str]):
+def google_drive_search_synchronous(keywords : List[str],connection_id:str):
+    """
+    RETURNS Document or False
+    Document - Strings that wrapped around Document class
+    Boolean - False for API call fails 
+
+    WORKWAY
+    FIRSTLY CHECKS FOR SUMMARY OF THE WORDS
+    IF NOT FOUND GOES FOR PARAGRAHP APPENDING
+    IF IT IS NOT THEN GOES FOR FULL TEXT
+    """
+    
+    url = "https://onebrain.onlizer.com/api/v1/googledrive/search"
+
+    payload = json.dumps({
+    "keywords": keywords,
+    "connectionId": connection_id,
+    "options": {
+        "searchOperator": "and",
+        "returnFullText": False,
+        "tokensSearchOperator": "or",
+        "tokens": [
+        "paragraphs",
+        "summary"
+        ]
+    }
+    })
+    headers = {
+    'Content-Type': 'application/json',
+    'Authorization': 'Bearer ZDE2YThmNGU3ODhhODkwMTdkMjQ5ZDA1ZmMwM2I2ZGY6OWFkNThmODE5OWViNmFjNmU4NWRkNjI2NTIyZTJhMGE='
+    }
+    try:
+        search_results = requests.request("POST", url, headers=headers, data=payload)
+    except Exception as e:
+        print(f"Error Occured during Google Drive Search\nError : {e}")
+        return "Error Occured during Google Drive Search"
+    if search_results.status_code != 200:
+        print(f"[LOGERR] Connection Error | Status Code : {search_results.status_code}")
+        if search_results.status_code == 400:
+            print("[LOGERR] Request parameter has unmatched keys in the body")
+            return "Tool is missing parameters to complete this search. If this issue is persistent please report it"
+        if search_results.status_code == 500:
+            print("[LOGERR] Onlizer API is down")
+            return "Search API is currently unavaliable"
+    # Process data
+    docs_found = search_results.json().get('files')
+    del search_results
+    wholesummary = google_drive_documentizer(docs_found=docs_found)
+    if not wholesummary:
+        return False
+    return wholesummary
+
+async def google_drive_search(keywords : List[str],connection_id:str):
     """
     RETURNS Document or False
     Document - Strings that wrapped around Document class
@@ -51,7 +116,7 @@ async def google_drive_search(keywords : List[str]):
 
     payload = {  
     "keywords":keywords,  
-    "connectionId":"googledrive__arslasercan@gmail.com",  
+    "connectionId":connection_id,  
     "options":{  
         "searchOperator":"and",  
         "returnFullText":True,  
@@ -69,7 +134,13 @@ async def google_drive_search(keywords : List[str]):
         print(f"Error Occured during Google Drive Search\nError : {e}")
         return "Error Occured during Google Drive Search"
     if search_results.status_code != 200:
-        return False
+        print(f"[LOGERR] Connection Error | Status Code : {search_results.status_code}")
+        if search_results.status_code == 400:
+            print("[LOGERR] Request parameter has unmatched keys in the body")
+            return "Tool is missing parameters to complete this search. If this issue is persistent please report it"
+        if search_results.status_code == 500:
+            print("[LOGERR] Onlizer API is down")
+            return "Search API is currently unavaliable"
     # Process data
     docs_found = search_results.json().get('files')
     del search_results
