@@ -50,22 +50,22 @@ services:
     ports:
       - "27017:27017"
 
-  redis:
-    image: redis:6.2-alpine
-    restart: always
-    ports:
-      - '6379:6379'
-    command: redis-server --save 20 1 --loglevel warning
-    # volumes: 
-    #   - ./storage/data/redis:/data # DANGEROUS
+  # redis:
+  #   image: redis:6.2-alpine
+  #   restart: always
+  #   ports:
+  #     - '6379:6379'
+  #   command: redis-server --save 20 1 --loglevel warning
+  #   # volumes: 
+  #   #   - ./storage/data/redis:/data # DANGEROUS
 
-  adminer:
-        image: adminer
-        hostname: adminer
-        container_name: adminer
-        restart: always
-        ports:
-            - 8888:8080
+  # adminer:
+  #       image: adminer
+  #       hostname: adminer
+  #       container_name: adminer
+  #       restart: always
+  #       ports:
+  #           - 8888:8080
 
 volumes:
   postgres_data:

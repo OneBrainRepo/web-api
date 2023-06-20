@@ -4,10 +4,6 @@ from fastapi.middleware.cors import CORSMiddleware
 from webapi.routes import user_routes, demo_routes, chat_routes
 from webapi.db.database import create_tables
 from webapi.mongo.config import connect, MONGODB_DB_NAME, MONGODB_HOST,MONGODB_PORT,MONGODB_DB_USERNAME,MONGODB_DB_PASSWD
-import ptvsd
-
-# Enable the debugger on port 5678
-ptvsd.enable_attach(('0.0.0.0', 5678))
 
 # Cors Settings
 cors_allowed_origins_str = os.getenv("CORS_ALLOWED_ORIGINS", "")
