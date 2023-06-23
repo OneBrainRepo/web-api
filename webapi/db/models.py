@@ -31,4 +31,5 @@ class ConnectionRequests(SQLModel, table=True):
     user_id: Optional[int] = Field(default=None, foreign_key="users.id")
     connection_id : str
     connection_title : Optional[str]
-    state: int
+    session_id : str = Field(default=uuid.uuid4())
+    state: str

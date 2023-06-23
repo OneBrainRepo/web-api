@@ -71,14 +71,14 @@ class UserDocumentSearchAsynchronously(BaseTool):
         except Exception as e:
             print("[LOGERR] Exception occured on Keyword generation for google drive")
             print(f"Error code : {e}")
-            return "Mention user that there was a problem with the searching and we couldnt generate keywords out of user question. Ask user to define his question in more descriptive manner"
+            return "Mention user that there was a problem with the searching and we couldnt generate keywords out of user question. User should provide more descriptive question to search through"
         document_list = await google_drive_search(keywords=keywords,connection_id=connection_id)
         if not document_list:
-            return "No documents has been found."
+            return "No documents has been found. Please return user that you were not able to find anything. Do not write any information from yourself. Simply tell user that no information has been found with the given question and ask him to check his spelling if there is any typo or mistake. ."
         print("Searching through documents")
         if type(document_list) == str:
             # Document list has returned an error
-            return "Currently tool is unavaliable due to an error. Respond user with an error message stating that currently searching through Google Drive is unavaliable"
+            return "Currently tool is unavaliable due to an error. Respond user with an error message stating that currently searching through Google Drive is unavaliable right now"
         docsearch = Chroma.from_documents(document_list, embeddings,metadatas=[{"source": f"{i}"} for i in range(len(document_list))])
         print("Calling RetrievalQA")
         qa = RetrievalQAWithSourcesChain.from_chain_type(llm=llm, chain_type="stuff", retriever=docsearch.as_retriever())
@@ -93,10 +93,10 @@ class UserDocumentSearchAsynchronously(BaseTool):
 
 class TitleMakerBasedOnQuestion(BaseTool):
     name = "Title Creator"
-    description= "Creates a title/headline based on the given question"
+    description= "Creates a title based on the given question. It should return the topic summary as a title that user would be able to understand what is the title about"
     def _run(self, userquestion: str) -> Any:
         print("TitleMakerBasedOnQuestion._run() is being called")
-        return llm.predict(f"Also please provide a title which summarizes user question. I want you to return just a String output, nothing more. Here is the user question : {userquestion}")
+        return llm.predict(f"Also please provide a title which summarizes user question. I want you to return just a String output, nothing more. Do not indicate title seperately. Just return whatever you think suitable as a text. Here is the user question : {userquestion}")
     async def _arun(self, *args: Any, **kwargs: Any) -> Any:
         raise NotImplemented("This tool only can be run as synchronously")
 

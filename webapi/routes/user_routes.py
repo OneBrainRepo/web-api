@@ -16,7 +16,7 @@ Later on we will change the path which this router is prefixed as
 
 """
 
-FRONT_END_URL = os.getenv("FRONT_END_URL","localhost:3000") 
+FRONT_END_URL = os.getenv("FRONT_END_URL","http://localhost:3000") 
 
 
 @router.get("/test")
@@ -49,17 +49,26 @@ def getTotalMessageleft(current_user: dict[str,str] = Depends(JWTGuard)):
 
 #Onlizer authenticate
 @router.get("/connect")
-def user_redirect(connection_id: str,state: int,connection_title : Optional[str] = None,error: Optional[str] = None):
+def user_redirect(connection_id: str,state: str,connection_title : Optional[str] = None,error: Optional[str] = None):
     # connection_id:str,state:int,connection_title:str, error:str
     # Those information is not correct yet, confirm with Onlizer API to ensure the correction of parameters
     payload = ConnectionRequestBase(connection_id=connection_id,connection_title=connection_title,state=state,error=error)
     useremail = payload.connection_id.split('_')[-1]
     save_connection_request(payload=payload)
-    return RedirectResponse(f"{FRONT_END_URL}/selectapp?email={useremail}&state={payload.state}")
+    redirect_url = f"{FRONT_END_URL}/chatterbox?email={useremail}&state={payload.state}"
+    print(f"Redirect URL : {redirect_url}")
+    return RedirectResponse(redirect_url)
 
-#Onlizer check
+#Session Check
 @router.get("/check")
 def onlizer_check(connection_id: str,state: int,connection_title : Optional[str] = None,error: Optional[str] = None,current_user: dict[str,str] = Depends(JWTGuard)):
+    foundUser = find_connection_id(userid=current_user.id)
+    print(f"Found user : {foundUser}\nConnection ID {connection_id}")
+    return foundUser
+
+#Session Verifier
+@router.get("/session")
+def onlizer_check(email: str,sessionid: str,current_user: dict[str,str] = Depends(JWTGuard)):
     foundUser = find_connection_id(userid=current_user.id)
     print(f"Found user : {foundUser}\nConnection ID {connection_id}")
     return foundUser

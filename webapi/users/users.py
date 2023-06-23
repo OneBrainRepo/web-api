@@ -99,6 +99,17 @@ def find_connection_id(userid:int):
     if foundConnectionId:
         return foundConnectionId
     raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,detail="User does not have any connection ID. Please connect with OAuth application to provide this information")
+
+def find_session_by_user(user_id:int,state:str,email:str):
+    foundConnectionId = find_first(ConnectionRequests,filter_by={"user_id":userid,"state":state})
+    # Check email matching 
+    if not foundConnectionId:
+        useremail = foundConnectionId.connection_id.split('_')[-1]
+        if useremail == email:
+            return foundConnectionId.session_id
+    raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,detail="User does not have any valid session")
+
+
 # DO NOT DEFINE ANY GUARDS HERE
 # ONLY SERVICES
 # GUARDS ARE DEFINED EITHER AS MIDDLEWARE OR IN THE AUTH MODULE
