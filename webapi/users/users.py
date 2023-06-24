@@ -123,9 +123,21 @@ def create_or_update_session(
     "session_id": uuid.uuid4()
     }
     try:
-        
-        request = upsert(ConnectionRequests,connection_request)
-        return request
+        # Check if it exist
+        foundConnectionId = find_first(ConnectionRequests,filter_by={"connection_id":connection_id})
+        if not foundConnectionId:
+            newConnectionRequest = ConnectionRequests(connection_id=connection_id,connection_title=connection_title,state=state,session_id=uuid.uuid4())
+            insertedRecord = create(ConnectionRequests,newConnectionRequest)
+            return insertedRecord
+        # If found
+        newSessionId = uuid.uuid4()
+        update(ConnectionRequests,foundConnectionId.id,{"state":state,"connection_title":connection_title,"session_id":newSessionId})
+        # request = upsert(ConnectionRequests,connection_request)
+        foundConnectionId.state = state
+        foundConnectionId.connection_title = connection_title
+        foundConnectionId.session_id = newSessionId
+
+        return foundConnectionId
     except Exception as e:
         print(f"[LOGERR] Exception : {e}")
         return False
@@ -138,6 +150,9 @@ def check_session_validity(payload: SessionVerifyPayload, user_id: int) -> Optio
     # Check if user_id is null then update, otherwise it is ssession jacking
     print(f"Found connection : {foundConnectionId}")
     if foundConnectionId.user_id:
+        if foundConnectionId.user_id == user_id:
+            # If user is this person allow access
+            return {"isValid":True}
         # Session is owned by someone else
         # Block the access
         return {"isValid":False} 
