@@ -15,5 +15,8 @@ class UserPublic(BaseModel):
 class ConnectionRequestBase(BaseModel):
     connection_id: str
     connection_title : Optional[str] = None
-    state: int
+    state: str
     error: Optional[str] = None
+
+class SessionVerifyPayload(BaseModel):
+    session_id: str

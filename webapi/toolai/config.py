@@ -1,5 +1,5 @@
 import os
-openai_api_key = "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"
+openai_api_key = os.getenv("AI_API_KEY","")
 os.environ["OPENAI_API_KEY"] = openai_api_key
 os.environ["LANGCHAIN_TRACING"] = "true"
 

@@ -12,7 +12,7 @@ class Users(SQLModel, table=True):
     uuid: Optional[str] = Field(default=str(uuid.uuid4()))
     username: str
     hashed_password: str
-    email: str | None = None
+    email: str | None = Field(...,unique=True)
     disabled: bool | None = None
 
 class Demo(SQLModel, table=True):
@@ -29,6 +29,7 @@ class MessageCounter(SQLModel, table=True):
 class ConnectionRequests(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     user_id: Optional[int] = Field(default=None, foreign_key="users.id")
-    connection_id : str
+    connection_id : str = Field(...,unique=True)
     connection_title : Optional[str]
-    state: int
+    session_id : str = Field(default=uuid.uuid4())
+    state: str
