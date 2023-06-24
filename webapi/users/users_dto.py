@@ -17,3 +17,6 @@ class ConnectionRequestBase(BaseModel):
     connection_title : Optional[str] = None
     state: str
     error: Optional[str] = None
+
+class SessionVerifyPayload(BaseModel):
+    session_id: str

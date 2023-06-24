@@ -1,10 +1,12 @@
 from webapi.auth.auth_dto import SignUpPayload, TokenData, DemoSignupPayload
 from webapi.auth.jwt import authenticate_user, create_jwt_token, return_decoded_token, get_user, get_password_hash, demo_jwt_token
-from webapi.db.CRUD import find_first, create, update
+from webapi.db.CRUD import find_first, create, update, upsert, update_if_exists
 from webapi.db.models import Users, Demo, ConnectionRequests, MessageCounter, ConnectionRequests
-from webapi.users.users_dto import UserSignIn, ConnectionRequestBase
+from webapi.users.users_dto import UserSignIn, ConnectionRequestBase, SessionVerifyPayload
 from fastapi import HTTPException, status, Depends
 from jose import JWTError, jwt
+from typing import Optional
+import uuid
 
 def find_user_by_email(email:str):
     return find_first(Users,filter_by={"email":email})
@@ -108,6 +110,32 @@ def find_session_by_user(user_id:int,state:str,email:str):
         if useremail == email:
             return foundConnectionId.session_id
     raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,detail="User does not have any valid session")
+
+def create_or_update_session(
+    connection_id: str, 
+    state: str, 
+    connection_title: Optional[str] = None, 
+    ) -> ConnectionRequests:
+    connection_request = {
+    "connection_id": connection_id,
+    "state": state,
+    "connection_title": connection_title,
+    "session_id": uuid.uuid4()
+    }
+    try:
+        
+        request = upsert(ConnectionRequests,connection_request)
+        return request
+    except Exception as e:
+        print(f"[LOGERR] Exception : {e}")
+        return False
+
+def check_session_validity(payload: SessionVerifyPayload, user_id: int) -> Optional[bool]:
+    session = update_if_exists(ConnectionRequests,{"session_id":payload.session_id},{"user_id":user_id})
+    if session is None:
+        return {"isValid":False}
+    return {"isValid":True}
+
 
 
 # DO NOT DEFINE ANY GUARDS HERE
