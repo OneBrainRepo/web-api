@@ -1,6 +1,6 @@
 from webapi.auth.auth_dto import SignUpPayload, TokenData, DemoSignupPayload
 from webapi.auth.jwt import authenticate_user, create_jwt_token, return_decoded_token, get_user, get_password_hash, demo_jwt_token
-from webapi.db.CRUD import find_first, create, update, upsert, update_if_exists
+from webapi.db.CRUD import find_first, create, update, upsert, update_if_exists, read
 from webapi.db.models import Users, Demo, ConnectionRequests, MessageCounter, ConnectionRequests
 from webapi.users.users_dto import UserSignIn, ConnectionRequestBase, SessionVerifyPayload
 from fastapi import HTTPException, status, Depends
@@ -131,10 +131,23 @@ def create_or_update_session(
         return False
 
 def check_session_validity(payload: SessionVerifyPayload, user_id: int) -> Optional[bool]:
-    session = update_if_exists(ConnectionRequests,{"session_id":payload.session_id},{"user_id":user_id})
-    if session is None:
+    print(f"Userid : {user_id}\nPayload : {payload.session_id}")
+    foundConnectionId = find_first(ConnectionRequests,filter_by={"session_id":payload.session_id})
+    if not foundConnectionId:
         return {"isValid":False}
+    # Check if user_id is null then update, otherwise it is ssession jacking
+    print(f"Found connection : {foundConnectionId}")
+    if foundConnectionId.user_id:
+        # Session is owned by someone else
+        # Block the access
+        return {"isValid":False} 
+    update(ConnectionRequests,foundConnectionId.id,{"user_id":user_id})
     return {"isValid":True}
+    # # Update if exists doesnt work well
+    # session = update_if_exists(ConnectionRequests,{"session_id":payload.session_id},{"user_id":user_id})
+    # if session is None:
+    #     return {"isValid":False}
+    # return {"isValid":True}
 
 
 
