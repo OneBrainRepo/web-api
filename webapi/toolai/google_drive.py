@@ -129,6 +129,7 @@ async def google_drive_search(keywords : List[str],connection_id:str):
     'Authorization': 'Bearer ZDE2YThmNGU3ODhhODkwMTdkMjQ5ZDA1ZmMwM2I2ZGY6OWFkNThmODE5OWViNmFjNmU4NWRkNjI2NTIyZTJhMGE='
     }
     try:
+        print(f"Current Payload : {payload}")
         search_results = await invoke_endpoint_async(url=url,body=payload,headers=headers,req_type="POST")
     except Exception as e:
         print(f"Error Occured during Google Drive Search\nError : {e}")

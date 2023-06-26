@@ -10,7 +10,7 @@ agent = initialize_agent(
     llm=llm,
     agent=AgentType.STRUCTURED_CHAT_ZERO_SHOT_REACT_DESCRIPTION,
     memory=conversational_memory,
-    max_iterations=3,
+    max_iterations=2,
     early_stopping_method='generate',
     verbose=True
 )

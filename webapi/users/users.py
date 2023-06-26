@@ -116,12 +116,6 @@ def create_or_update_session(
     state: str, 
     connection_title: Optional[str] = None, 
     ) -> ConnectionRequests:
-    connection_request = {
-    "connection_id": connection_id,
-    "state": state,
-    "connection_title": connection_title,
-    "session_id": uuid.uuid4()
-    }
     try:
         # Check if it exist
         foundConnectionId = find_first(ConnectionRequests,filter_by={"connection_id":connection_id})
@@ -136,7 +130,6 @@ def create_or_update_session(
         foundConnectionId.state = state
         foundConnectionId.connection_title = connection_title
         foundConnectionId.session_id = newSessionId
-
         return foundConnectionId
     except Exception as e:
         print(f"[LOGERR] Exception : {e}")
@@ -152,11 +145,14 @@ def check_session_validity(payload: SessionVerifyPayload, user_id: int) -> Optio
     if foundConnectionId.user_id:
         if foundConnectionId.user_id == user_id:
             # If user is this person allow access
+            print(f"User Allowed")
             return {"isValid":True}
         # Session is owned by someone else
         # Block the access
+        print(f"User NOT Allowed")
         return {"isValid":False} 
     update(ConnectionRequests,foundConnectionId.id,{"user_id":user_id})
+    print(f"User Allowed")
     return {"isValid":True}
     # # Update if exists doesnt work well
     # session = update_if_exists(ConnectionRequests,{"session_id":payload.session_id},{"user_id":user_id})
