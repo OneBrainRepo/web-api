@@ -1,6 +1,6 @@
 from webapi.auth.auth_dto import SignUpPayload, TokenData, DemoSignupPayload
 from webapi.auth.jwt import authenticate_user, create_jwt_token, return_decoded_token, get_user, get_password_hash, demo_jwt_token
-from webapi.db.CRUD import find_first, create, update, upsert, update_if_exists
+from webapi.db.CRUD import find_first, create, update, upsert, update_if_exists, read
 from webapi.db.models import Users, Demo, ConnectionRequests, MessageCounter, ConnectionRequests
 from webapi.users.users_dto import UserSignIn, ConnectionRequestBase, SessionVerifyPayload
 from fastapi import HTTPException, status, Depends
@@ -116,25 +116,49 @@ def create_or_update_session(
     state: str, 
     connection_title: Optional[str] = None, 
     ) -> ConnectionRequests:
-    connection_request = {
-    "connection_id": connection_id,
-    "state": state,
-    "connection_title": connection_title,
-    "session_id": uuid.uuid4()
-    }
     try:
-        
-        request = upsert(ConnectionRequests,connection_request)
-        return request
+        # Check if it exist
+        foundConnectionId = find_first(ConnectionRequests,filter_by={"connection_id":connection_id})
+        if not foundConnectionId:
+            newConnectionRequest = ConnectionRequests(connection_id=connection_id,connection_title=connection_title,state=state,session_id=uuid.uuid4())
+            insertedRecord = create(ConnectionRequests,newConnectionRequest)
+            return insertedRecord
+        # If found
+        newSessionId = uuid.uuid4()
+        update(ConnectionRequests,foundConnectionId.id,{"state":state,"connection_title":connection_title,"session_id":newSessionId})
+        # request = upsert(ConnectionRequests,connection_request)
+        foundConnectionId.state = state
+        foundConnectionId.connection_title = connection_title
+        foundConnectionId.session_id = newSessionId
+        return foundConnectionId
     except Exception as e:
         print(f"[LOGERR] Exception : {e}")
         return False
 
 def check_session_validity(payload: SessionVerifyPayload, user_id: int) -> Optional[bool]:
-    session = update_if_exists(ConnectionRequests,{"session_id":payload.session_id},{"user_id":user_id})
-    if session is None:
+    print(f"Userid : {user_id}\nPayload : {payload.session_id}")
+    foundConnectionId = find_first(ConnectionRequests,filter_by={"session_id":payload.session_id})
+    if not foundConnectionId:
         return {"isValid":False}
+    # Check if user_id is null then update, otherwise it is ssession jacking
+    print(f"Found connection : {foundConnectionId}")
+    if foundConnectionId.user_id:
+        if foundConnectionId.user_id == user_id:
+            # If user is this person allow access
+            print(f"User Allowed")
+            return {"isValid":True}
+        # Session is owned by someone else
+        # Block the access
+        print(f"User NOT Allowed")
+        return {"isValid":False} 
+    update(ConnectionRequests,foundConnectionId.id,{"user_id":user_id})
+    print(f"User Allowed")
     return {"isValid":True}
+    # # Update if exists doesnt work well
+    # session = update_if_exists(ConnectionRequests,{"session_id":payload.session_id},{"user_id":user_id})
+    # if session is None:
+    #     return {"isValid":False}
+    # return {"isValid":True}
 
 
 

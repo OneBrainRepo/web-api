@@ -66,8 +66,10 @@ class UserDocumentSearchAsynchronously(BaseTool):
     async def _arun(self, question: str, keywords:str, connection_id:str, run_manager : Optional[AsyncCallbackManagerForToolRun] = None) -> str:
         # Keywords might not be list of strings currently, therefore split them by comma
         try:
+            print(f"Keywords currently : {keywords}")
             keywords = re.sub(r"\s+", "", keywords)
             keywords = keywords.split(",")
+            print(f"Keywords after split : {keywords}")
         except Exception as e:
             print("[LOGERR] Exception occured on Keyword generation for google drive")
             print(f"Error code : {e}")

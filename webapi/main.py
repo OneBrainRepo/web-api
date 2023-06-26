@@ -8,7 +8,7 @@ from webapi.mongo.config import connect, MONGODB_DB_NAME, MONGODB_HOST,MONGODB_P
 # Cors Settings
 cors_allowed_origins_str = os.getenv("CORS_ALLOWED_ORIGINS", "")
 origins = cors_allowed_origins_str.split(",") if cors_allowed_origins_str else ["*"]
-
+origins=["*"]
 app = FastAPI()
 app.add_middleware(
     CORSMiddleware,
