@@ -15,7 +15,7 @@ llm = ChatOpenAI(
 
 conversational_memory = ConversationBufferWindowMemory(
         memory_key='chat_history',
-        k=5,
+        k=10,
         return_messages=True
 )
 conversational_memory.save_context({"input": "hi, what are you doing"}, {"output": "Hi, I am helping a customer to resolve his problems"})
