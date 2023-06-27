@@ -18,7 +18,8 @@ conversational_memory = ConversationBufferWindowMemory(
         k=5,
         return_messages=True
 )
-
+conversational_memory.save_context({"input": "hi, what are you doing"}, {"output": "Hi, I am helping a customer to resolve his problems"})
+conversational_memory.save_context({"input": "What issue does he face"}, {"output": "He's having problem with his internet connection"})
 embeddings = OpenAIEmbeddings()
 
 
