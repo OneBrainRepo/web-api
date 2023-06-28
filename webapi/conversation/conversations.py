@@ -305,6 +305,7 @@ async def append_to_response(userid:int,payload:ChatHistoryAppendToEnd):
         user_question_sanitized = sanitize(payload.Question)
         crafted_user_question_with_connectionid = user_question_sanitized + f" . My connection_id : {foundConnectionID.connection_id}"
         # Import agent and preload it with this information
+        print(f"Question : {crafted_user_question_with_connectionid}")
         result = await agent_awaitrun_with_messages(question=crafted_user_question_with_connectionid,HumanMessages=userQuestionsList,AIMessages=machineAnswersList)
     except Exception as e:
         print(f"Exception at Append : {e}")

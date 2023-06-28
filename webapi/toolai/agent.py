@@ -5,16 +5,6 @@ from webapi.toolai.tools import tool_class, tool_search_class
 from webapi.toolai.config import llm,embeddings,conversational_memory
 from langchain import PromptTemplate, LLMChain
 
-# agent = initialize_agent(
-#     tools= tool_class,
-#     llm=llm,
-#     agent=AgentType.STRUCTURED_CHAT_ZERO_SHOT_REACT_DESCRIPTION,
-#     memory=conversational_memory,
-#     max_iterations=2,
-#     early_stopping_method='generate',
-#     verbose=True
-# )
-
 # Agent Behavior Description
 sys_msg = """Assistant is a large language model trained by OneBrain.
 
@@ -29,6 +19,7 @@ Assistant should be able to also recall the memory to be able to answer question
 Assistant should prioritize to not to use the tools. It should check its memory first and if no information is found valuable there, it should look for tools to search this information. When asked about an source of information, agent always uses its tools to find answer.
 
 Overall, Assistant is a powerful system that can help with a wide range of tasks and provide valuable insights and information on a wide range of topics. Whether you need help with a specific question or just want to have a conversation about a particular topic, Assistant is here to assist.
+ou have access to the following tools:
 """
 
 suffix = """Begin!"
@@ -45,11 +36,20 @@ prompt = StructuredChatAgent.create_prompt(
 )
 
 llm_chain = LLMChain(llm=llm, prompt=prompt)
-agent = StructuredChatAgent(llm_chain=llm_chain, tools=tool_class, verbose=True)
-
-agent_chain = AgentExecutor.from_agent_and_tools(
-    agent=agent, tools=tool_class, verbose=True, memory=conversational_memory
+# agent = StructuredChatAgent(llm_chain=llm_chain, tools=tool_class, verbose=True)
+agent_chain = initialize_agent(
+    tools= tool_class,
+    llm=llm,
+    agent=AgentType.STRUCTURED_CHAT_ZERO_SHOT_REACT_DESCRIPTION,
+    memory=conversational_memory,
+    max_iterations=3,
+    early_stopping_method='no_improvement',
+    verbose=True
 )
+
+# agent_chain = AgentExecutor.from_agent_and_tools(
+#     agent=agent, tools=tool_class, verbose=True, memory=conversational_memory
+# )
 
 # new_prompt = PromptTemplate.from_template(sys_msg)
 
@@ -69,6 +69,11 @@ def agent_add_human_messages(ListMessages:list[str]=None):
         for message in ListMessages:
             agent.memory.chat_memory.add_user_message(message)
 
+def agent_add_all_messages(HumanMessages:list[str],AIMessages:list[str]):
+    minumum_number_of_message = min(len(HumanMessages),len(AIMessages))
+    for index in range(minumum_number_of_message):
+        conversational_memory.save_context({"input":HumanMessages[index]},{"output":AIMessages[index]})
+
 async def agent_awaitrun(question:str):
     print(f"Memory : {conversational_memory.load_memory_variables({})}")
     agent_response = await agent_chain.arun(question)
@@ -78,6 +83,7 @@ async def agent_awaitrun_with_messages(question:str,HumanMessages:list[str],AIMe
     """Runs the agent with the messages history"""
     # agent_add_ai_messages(AIMessages)
     # agent_add_human_messages(HumanMessages)
+    agent_add_all_messages(HumanMessages=HumanMessages,AIMessages=AIMessages)
     print(f"Memory : {conversational_memory.load_memory_variables({})}")
     agent_response = await agent_chain.arun(question)
     return agent_response
