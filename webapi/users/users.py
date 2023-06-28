@@ -136,11 +136,11 @@ def create_or_update_session(
         return False
 
 def check_session_validity(payload: SessionVerifyPayload, current_user: dict[str,str]) -> Optional[bool]:
-    print(f"Userid : {user_id}\nPayload : {payload.session_id}")
     foundConnectionId = find_first(ConnectionRequests,filter_by={"session_id":payload.session_id})
     current_email = current_user.email
     user_id = current_user.id
     foundConnectionIdEmail = foundConnectionId.connection_id.split("__")[-1]
+    print(f"Userid : {user_id}\nPayload : {payload.session_id}")
     # If foundConnection , then compare emails if not block access
     if not foundConnectionId:
         return {"isValid":False}
