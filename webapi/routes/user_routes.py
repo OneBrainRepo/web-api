@@ -75,4 +75,4 @@ def onlizer_check(connection_id: str,state: int,connection_title : Optional[str]
 def onlizer_check(payload : SessionVerifyPayload,current_user: dict[str,str] = Depends(JWTGuard)):
     # CHECK SESSION ID AND COMPARE WITH CURRENT USER'S EMAIL, IF TRUE RETURN 200 ELSE 404
     print(f"Session id for /session endpoint : {payload.session_id}")
-    return check_session_validity(payload,current_user.id)
+    return check_session_validity(payload,current_user)

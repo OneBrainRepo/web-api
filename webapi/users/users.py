@@ -135,22 +135,29 @@ def create_or_update_session(
         print(f"[LOGERR] Exception : {e}")
         return False
 
-def check_session_validity(payload: SessionVerifyPayload, user_id: int) -> Optional[bool]:
+def check_session_validity(payload: SessionVerifyPayload, current_user: dict[str,str]) -> Optional[bool]:
     print(f"Userid : {user_id}\nPayload : {payload.session_id}")
     foundConnectionId = find_first(ConnectionRequests,filter_by={"session_id":payload.session_id})
+    current_email = current_user.email
+    user_id = current_user.id
+    foundConnectionIdEmail = foundConnectionId.connection_id.split("__")[-1]
+    # If foundConnection , then compare emails if not block access
     if not foundConnectionId:
         return {"isValid":False}
     # Check if user_id is null then update, otherwise it is ssession jacking
     print(f"Found connection : {foundConnectionId}")
     if foundConnectionId.user_id:
-        if foundConnectionId.user_id == user_id:
+        # If user emails are matchinbg allow them
+        if foundConnectionIdEmail == current_email:
             # If user is this person allow access
+            update(ConnectionRequests,foundConnectionId.id,{"user_id":user_id})
             print(f"User Allowed")
             return {"isValid":True}
-        # Session is owned by someone else
+        # Session is owned by someone else and emails are not matching
         # Block the access
         print(f"User NOT Allowed")
         return {"isValid":False} 
+    # If user id is empty update it
     update(ConnectionRequests,foundConnectionId.id,{"user_id":user_id})
     print(f"User Allowed")
     return {"isValid":True}
