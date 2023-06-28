@@ -21,22 +21,22 @@ def protected_test(current_user: dict[str,str] = Depends(JWTGuard)):
 # Tested Ok
 @router.get("/last")
 def last_conversation(current_user: dict[str,str] = Depends(JWTGuard)):
-    return get_last_conversation(current_user.id)
+    return get_last_conversation(current_user)
 
 # Tested OK
 @router.get("/all")
 def all_conversation(current_user: dict[str,str] = Depends(JWTGuard)):
-    return get_all_conversation(current_user.id)
+    return get_all_conversation(current_user)
 
 # Tested OK
 @router.get("/titles")
 def all_conversation(current_user: dict[str,str] = Depends(JWTGuard)):
-    return get_all_titles(current_user.id)   
+    return get_all_titles(current_user)   
 
 # Tested OK
 @router.get("/specific")
 def specific_conversation(chatid : str ,current_user: dict[str,str] = Depends(JWTGuard)):
-    return get_specific_coversation(userid=current_user.id,chatid=chatid)
+    return get_specific_coversation(userid=current_user,chatid=chatid)
 
 # Tested Ok
 # Used for opening a new chat window
@@ -53,12 +53,12 @@ async def append_to_conversation(payload:ChatHistoryAppendToEnd,current_user: di
     limit_reached = checkUserMessageAllowance(userid=current_user.id)
     if limit_reached:
         return limit_reached
-    return await append_to_response(payload=payload,userid=current_user.id)
+    return await append_to_response(payload=payload,userid=current_user)
 
 # Tested OK
 @router.post("/edit_title")
 def change_title(payload:ChatUpdateTitle,current_user : dict[str,str] = Depends(JWTGuard)):
-    return change_conversation_title(payload=payload,userid=current_user.id)
+    return change_conversation_title(payload=payload,userid=current_user)
 
 @router.post("/edit_message")
 def change_message(payload:ChatUpdateMessage,current_user : dict[str,str] = Depends(JWTGuard)):
@@ -71,7 +71,7 @@ def change_message(payload:ChatUpdateMessage,current_user : dict[str,str] = Depe
 
 @router.get("/delete")
 def delete_message(id:str,current_user : dict[str,str] = Depends(JWTGuard)):
-    delete_user_message(id=id,userid=current_user.id)
+    delete_user_message(id=id,userid=current_user)
     return Response(status_code=202)
 
 # @router.get("/testmessages")
