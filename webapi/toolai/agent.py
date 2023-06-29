@@ -50,8 +50,8 @@ agent = initialize_agent(
     llm=llm,
     agent=AgentType.OPENAI_MULTI_FUNCTIONS,
     # memory=conversational_memory,
-    # max_iterations=5,
-    # early_stopping_method='generate',
+    max_iterations=2,
+    early_stopping_method='generate',
     verbose=True
 )
 

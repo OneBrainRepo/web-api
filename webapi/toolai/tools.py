@@ -16,7 +16,7 @@ from langchain.callbacks.manager import AsyncCallbackManagerForToolRun, Callback
 
 
 class GetPowerValue(BaseTool):
-    name="Get Power Value"
+    name="GetPowerValue"
     description="With given two input, it will raise first input to power of second input. Both inputs needs to be integer"
     args_schema : Type[CalculatePower] | None = CalculatePower
     def _run(self, first_var:str , second_var:str) -> int:
@@ -29,7 +29,7 @@ class GetPowerValue(BaseTool):
         raise NotImplementedError("custom_search does not support async")
 
 class UserDocumentSearchOnDrive(BaseTool):
-    name="Google Drive Document Search"
+    name="GoogleDriveDocumentSearch"
     description="Searches through User's google drive with provided connection_id and question. It uses connection id variable to access to the google drive and searches keywords that are extracted from the user question"
     args_schema : Type[UserDocumentSearch] | None = UserDocumentSearch
 
@@ -60,7 +60,7 @@ class UserDocumentSearchOnDrive(BaseTool):
         raise NotImplementedError("custom_search does not support async")
 
 class UserDocumentSearchAsynchronously(BaseTool):
-    name="Google Drive Document Search Asynchronously"
+    name="GoogleDriveDocumentSearchAsynchronously"
     description="Searches through User's google drive asynchronously with provided connection_id and question. It uses connection id variable to access to the google drive and searches keywords that are extracted from the user question. Use this one for google drive document search more often since it can handle requests asynchronously, it is performance optimized. Call this function via _arun method. It is asynchronous"
     args_schema: Type[UserDocumentSearch] | None = UserDocumentSearch
 
@@ -96,7 +96,7 @@ class UserDocumentSearchAsynchronously(BaseTool):
         raise NotImplementedError("Google Drive Document Search Asynchronously does not support sync, it only works async")
 
 class TitleMakerBasedOnQuestion(BaseTool):
-    name = "Title Creator"
+    name = "TitleCreator"
     description= "Creates a title based on the given question. It should return the topic summary as a title that user would be able to understand what is the title about"
     def _run(self, userquestion: str) -> Any:
         print("TitleMakerBasedOnQuestion._run() is being called")
