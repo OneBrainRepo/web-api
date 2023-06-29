@@ -74,6 +74,18 @@ def delete_message(id:str,current_user : dict[str,str] = Depends(JWTGuard)):
     delete_user_message(id=id,userid=current_user)
     return Response(status_code=202)
 
+@router.get("/debugtools")
+async def debug_tools_google():
+    # Define the input
+    input = {
+        "question": "What is Ethan's role in Agorapp?",
+        "keywords": "Ethan, role, Agorapp",
+        "connection_id": "googledrive__arslasercan@gmail.com"
+    }
+    respond = await tool_debugger(input=input)
+    return respond
+
+
 # @router.get("/testmessages")
 # def specific_conversation(chatid : str ,current_user: dict[str,str] = Depends(JWTGuard)):
 #     objectresult = get_specific_coversation_object(userid=current_user.id,chatid=chatid)

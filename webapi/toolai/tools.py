@@ -34,6 +34,7 @@ class UserDocumentSearchOnDrive(BaseTool):
     args_schema : Type[UserDocumentSearch] | None = UserDocumentSearch
 
     def _run(self, question: str, keywords:str, connection_id:str, run_manager : Optional[CallbackManagerForToolRun] = None) -> str:
+        print(f"Started Execution of UserDocumentSearchOnDrive on _run()")
         try:
             keywords = re.sub(r"\s+", "", keywords)
             keywords = keywords.split(",")
@@ -65,6 +66,7 @@ class UserDocumentSearchAsynchronously(BaseTool):
 
     async def _arun(self, question: str, keywords:str, connection_id:str, run_manager : Optional[AsyncCallbackManagerForToolRun] = None) -> str:
         # Keywords might not be list of strings currently, therefore split them by comma
+        print(f"Started Execution of UserDocumentSearchAsynchronously on _arun()")
         try:
             print(f"Keywords currently : {keywords}")
             keywords = re.sub(r"\s+", "", keywords)

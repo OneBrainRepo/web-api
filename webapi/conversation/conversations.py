@@ -2,7 +2,7 @@ from webapi.mongo.CRUD import *
 from webapi.conversation.conversation_dto import ChatHistoryByID, ChatHistoryAppend, ChatUpdateTitle, ChatUpdateMessage, ChatHistoryCreate, ChatHistoryAppendToEnd, Chat_MachineAnswer_single, ChatUpdateMessageByIndex, ChatUpdateMessageListByIndex
 from webapi.users.users_dto import UserPublic
 from webapi.mongo.models import Author, ChatHistory
-from webapi.toolai.agent import agent_add_ai_messages,agent_add_human_messages,agent_awaitrun_with_messages,agent_awaitrun,generate_title_ai
+from webapi.toolai.agent import agent_add_ai_messages,agent_add_human_messages,agent_awaitrun_with_messages,agent_awaitrun,generate_title_ai, tool_debug
 from webapi.users.users import allow_block_limit_for_message, increment_message_usage, find_connection_id
 from fastapi import HTTPException
 from typing import Any
@@ -335,7 +335,14 @@ async def create_new_response(userid:dict[str,str],payload:Chat_MachineAnswer_si
         user_question_sanitized = sanitize(payload.Question)
         # Will be using crafted user question to handle it 
         crafted_user_question_with_connectionid = user_question_sanitized + f" . My connection_id : {foundConnectionID.connection_id}"
-        result = await agent_awaitrun(question=crafted_user_question_with_connectionid)
+        print(f"Question : {crafted_user_question_with_connectionid}")
+        question = {
+            "input":{
+                "question": user_question_sanitized,
+                "connection_id": foundConnectionID.connection_id
+            }
+        }
+        result = await agent_awaitrun(question=question)
         title = generate_title_ai(question=user_question_sanitized)
     except Exception as e:
         print(f"Exception on Create : {e}")
@@ -366,3 +373,6 @@ async def regenerate_response(messageIdx:int,userid:dict[str,str],chatid:str):
     machineAnswersList[messageIdx] = result
     crafted_payload = ChatUpdateMessageListByIndex(id=chatid,Chat_MachineAnswerList=machineAnswersList,Chat_UserQuestionList=userQuestionsList)
     return change_specific_message_by_index(payload=crafted_payload,userid=userid)
+
+async def tool_debugger(input):
+    return await tool_debug(input=input)
