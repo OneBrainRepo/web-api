@@ -336,13 +336,13 @@ async def create_new_response(userid:dict[str,str],payload:Chat_MachineAnswer_si
         # Will be using crafted user question to handle it 
         crafted_user_question_with_connectionid = user_question_sanitized + f" . My connection_id : {foundConnectionID.connection_id}"
         print(f"Question : {crafted_user_question_with_connectionid}")
-        question = {
-            "input":{
-                "question": user_question_sanitized,
-                "connection_id": foundConnectionID.connection_id
-            }
-        }
-        result = await agent_awaitrun(question=question)
+        # question = {
+        #     "input":{
+        #         "question": user_question_sanitized,
+        #         "connection_id": foundConnectionID.connection_id
+        #     }
+        # }
+        result = await agent_awaitrun(question=crafted_user_question_with_connectionid)
         title = generate_title_ai(question=user_question_sanitized)
     except Exception as e:
         print(f"Exception on Create : {e}")

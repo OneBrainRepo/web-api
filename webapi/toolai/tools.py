@@ -69,8 +69,8 @@ class UserDocumentSearchAsynchronously(BaseTool):
         print(f"Started Execution of UserDocumentSearchAsynchronously on _arun()")
         try:
             print(f"Keywords currently : {keywords}")
-            keywords = re.sub(r"\s+", "", keywords)
-            keywords = keywords.split(",")
+            # keywords = re.sub(r"\s+", "", keywords)
+            keywords = keywords.split(" ")
             print(f"Keywords after split : {keywords}")
         except Exception as e:
             print("[LOGERR] Exception occured on Keyword generation for google drive")
@@ -104,5 +104,5 @@ class TitleMakerBasedOnQuestion(BaseTool):
     async def _arun(self, *args: Any, **kwargs: Any) -> Any:
         raise NotImplemented("This tool only can be run as synchronously")
 
-tool_class = [UserDocumentSearchAsynchronously(),UserDocumentSearchOnDrive()]
+tool_class = [UserDocumentSearchAsynchronously(),GetPowerValue()]
 tool_search_class = [UserDocumentSearchAsynchronously()]

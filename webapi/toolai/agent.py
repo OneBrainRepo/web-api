@@ -4,6 +4,9 @@ from langchain.agents import AgentType, initialize_agent, StructuredChatAgent, A
 from webapi.toolai.tools import tool_class, tool_search_class, UserDocumentSearchAsynchronously
 from webapi.toolai.config import llm,embeddings,conversational_memory
 from langchain import PromptTemplate, LLMChain
+import langchain
+
+langchain.debug = True
 
 # Agent Behavior Description
 sys_msg = """Assistant is a large language model trained by OneBrain.
@@ -45,10 +48,10 @@ agent_chain = AgentExecutor.from_agent_and_tools(
 agent = initialize_agent(
     tools= tool_class,
     llm=llm,
-    agent=AgentType.STRUCTURED_CHAT_ZERO_SHOT_REACT_DESCRIPTION,
+    agent=AgentType.OPENAI_MULTI_FUNCTIONS,
     # memory=conversational_memory,
-    max_iterations=5,
-    early_stopping_method='generate',
+    # max_iterations=5,
+    # early_stopping_method='generate',
     verbose=True
 )
 
