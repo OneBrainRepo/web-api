@@ -12,9 +12,10 @@ python-jose==3.3.0
 sqlalchemy-utils==0.41.1
 celery==5.2.7
 redis==4.5.4
-httpx==0.24.0
+httpx>=0.24.0
 tiktoken==0.3.3
 openai==0.27.0
+duckduckgo-search==3.8.3
 psycopg2
 chromadb
 langchain

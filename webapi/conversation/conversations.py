@@ -2,7 +2,7 @@ from webapi.mongo.CRUD import *
 from webapi.conversation.conversation_dto import ChatHistoryByID, ChatHistoryAppend, ChatUpdateTitle, ChatUpdateMessage, ChatHistoryCreate, ChatHistoryAppendToEnd, Chat_MachineAnswer_single, ChatUpdateMessageByIndex, ChatUpdateMessageListByIndex
 from webapi.users.users_dto import UserPublic
 from webapi.mongo.models import Author, ChatHistory
-from webapi.toolai.agent import agent_add_ai_messages,agent_add_human_messages,agent_awaitrun_with_messages,agent_awaitrun,generate_title_ai, tool_debug
+from webapi.toolai.agent import agent_add_ai_messages,agent_add_human_messages,agent_awaitrun_with_messages,agent_awaitrun,generate_title_ai, duckduckgo_search_agent, tool_debug
 from webapi.users.users import allow_block_limit_for_message, increment_message_usage, find_connection_id
 from fastapi import HTTPException
 from typing import Any
@@ -378,3 +378,8 @@ async def regenerate_response(messageIdx:int,userid:dict[str,str],chatid:str):
 
 async def tool_debugger(input):
     return await tool_debug(input=input)
+
+def duckduckgo_search_conversation(Question:str):
+    print(f"Calling Conversation DuckDuckGo")
+    return duckduckgo_search_agent(Question)
+    

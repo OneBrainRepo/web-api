@@ -85,6 +85,10 @@ async def debug_tools_google():
     respond = await tool_debugger(input=input)
     return respond
 
+@router.post("/duckduckgo_search")
+def search_on_duckduckgo(payload:Chat_MachineAnswer_single):
+    return duckduckgo_search_conversation(payload.Question)
+
 
 # @router.get("/testmessages")
 # def specific_conversation(chatid : str ,current_user: dict[str,str] = Depends(JWTGuard)):

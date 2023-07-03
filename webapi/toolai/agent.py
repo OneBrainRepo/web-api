@@ -1,9 +1,10 @@
 # All agent related functions will be here
 from webapi.toolai.tools import TitleMakerBasedOnQuestion
 from langchain.agents import AgentType, initialize_agent, StructuredChatAgent, AgentExecutor
-from webapi.toolai.tools import tool_class, tool_search_class, UserDocumentSearchAsynchronously
+from webapi.toolai.tools import tool_class, tool_search_class, UserDocumentSearchAsynchronously, DuckDuckGoTool
 from webapi.toolai.config import llm,embeddings,conversational_memory
 from langchain import PromptTemplate, LLMChain
+from langchain.chains.summarize import load_summarize_chain
 import langchain
 
 langchain.debug = True
@@ -44,6 +45,8 @@ agent_chain = AgentExecutor.from_agent_and_tools(
     agent=agent_struct, tools=tool_class, verbose=True
 )
 
+summary_chain = load_summarize_chain(llm, chain_type="map_reduce")
+
 
 agent = initialize_agent(
     tools= tool_class,
@@ -81,6 +84,11 @@ async def agent_awaitrun_with_messages(question:str,HumanMessages:list[str],AIMe
     agent_add_ai_messages(AIMessages)
     agent_add_human_messages(HumanMessages)
     return await agent.arun(question)
+
+def duckduckgo_search_agent(Question:str):
+    print("Calling Agent DuckDuckGo")
+    docs = DuckDuckGoTool(Question)
+    return summary_chain.run(docs)
 
 async def tool_debug(input):
     inputdict = {

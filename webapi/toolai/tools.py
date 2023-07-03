@@ -3,6 +3,7 @@ from langchain.vectorstores import Chroma
 from langchain.chains import RetrievalQA, RetrievalQAWithSourcesChain, ConversationalRetrievalChain
 from langchain.callbacks.manager import AsyncCallbackManagerForToolRun, CallbackManagerForToolRun
 from langchain.docstore.document import Document
+from langchain.tools import DuckDuckGoSearchRun
 from typing import Optional, Type, List, Any
 import re
 
@@ -103,6 +104,14 @@ class TitleMakerBasedOnQuestion(BaseTool):
         return llm.predict(f"Also please provide a title which summarizes user question. I want you to return just a String output, nothing more. Do not indicate title seperately. Just return whatever you think suitable as a text. Here is the user question : {userquestion}")
     async def _arun(self, *args: Any, **kwargs: Any) -> Any:
         raise NotImplemented("This tool only can be run as synchronously")
+
+def DuckDuckGoTool(Question:str) -> List[Document] :
+    print("Calling DuckDuckGoTool")
+    search = DuckDuckGoSearchRun()
+    result = search.run(Question)
+    docs = [Document(page_content=result)]
+    return docs
+
 
 tool_class = [UserDocumentSearchAsynchronously(),GetPowerValue()]
 tool_search_class = [UserDocumentSearchAsynchronously()]
