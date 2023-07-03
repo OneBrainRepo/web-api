@@ -64,7 +64,9 @@ def covert_to_public_user_format(user_id):
     )
 
 def sanitize(input_string:str):
-    return re.sub(r'[^A-Za-z0-9 _-]+', '', input_string)
+    return input_string
+    # DISABLED FOR DEMO
+    #return re.sub(r'[^A-Za-z0-9 _-]+', '', input_string)
 
 def get_last_conversation(userid:dict[str,str]) -> (dict[str, str] | dict[str, Any]) :
     """
