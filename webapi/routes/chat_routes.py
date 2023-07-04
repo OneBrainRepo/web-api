@@ -87,7 +87,11 @@ async def debug_tools_google():
 
 @router.post("/duckduckgo_search")
 def search_on_duckduckgo(payload:Chat_MachineAnswer_single):
-    return duckduckgo_search_conversation(payload.Question)
+    answer = duckduckgo_search_conversation(payload.Question)
+    return {
+        "title":payload.Question,
+        "answer": answer
+    }
 
 
 # @router.get("/testmessages")
