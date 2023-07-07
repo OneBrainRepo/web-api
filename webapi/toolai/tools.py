@@ -1,5 +1,4 @@
 from langchain.tools import StructuredTool, BaseTool
-from langchain.vectorstores import Chroma
 from langchain.chains import RetrievalQA, RetrievalQAWithSourcesChain, ConversationalRetrievalChain
 from langchain.callbacks.manager import AsyncCallbackManagerForToolRun, CallbackManagerForToolRun
 from langchain.docstore.document import Document
@@ -7,8 +6,9 @@ from langchain.tools import DuckDuckGoSearchRun
 from typing import Optional, Type, List, Any
 import re
 
-from webapi.toolai.google_args_schema import CalculatePower, UserDocumentSearch
+from webapi.toolai.google_args_schema import CalculatePower, UserDocumentSearch, NotionPageSearch
 from webapi.toolai.google_drive import google_drive_search_synchronous, google_drive_search
+from webapi.toolai.notion_tool import notion_get_content_document
 from webapi.toolai.config import llm,embeddings
 
 from langchain.callbacks.manager import AsyncCallbackManagerForToolRun, CallbackManagerForToolRun
@@ -79,20 +79,31 @@ class UserDocumentSearchAsynchronously(BaseTool):
             return "Mention user that there was a problem with the searching and we couldnt generate keywords out of user question. User should provide more descriptive question to search through"
         document_list = await google_drive_search(keywords=keywords,connection_id=connection_id)
         if not document_list:
+            # No document found error
             return "No documents has been found. Please return user that you were not able to find anything. Do not write any information from yourself. Simply tell user that no information has been found with the given question and ask him to check his spelling if there is any typo or mistake. ."
         print("Searching through documents")
         if type(document_list) == str:
             # Document list has returned an error
-            return "Currently tool is unavaliable due to an error. Respond user with an error message stating that currently searching through Google Drive is unavaliable right now"
+            return "Respond to user as : Sorry there was an error occured, please ask again"
+        from langchain.vectorstores import Chroma
         docsearch = Chroma.from_documents(document_list, embeddings,metadatas=[{"source": f"{i}"} for i in range(len(document_list))])
         print("Calling RetrievalQA")
-        qa = RetrievalQAWithSourcesChain.from_chain_type(llm=llm, chain_type="stuff", retriever=docsearch.as_retriever())
+        # qa = RetrievalQAWithSourcesChain.from_chain_type(llm=llm, chain_type="stuff", retriever=docsearch.as_retriever())
+        print(f"Calling Alternative QA with Conversational chain")
+        from langchain.memory import ConversationBufferMemory
+        memory = ConversationBufferMemory(memory_key="chat_history", return_messages=True)
+        qa_alternative = ConversationalRetrievalChain.from_llm(llm=llm,retriever=docsearch.as_retriever(),memory=memory,verbose=True)
         # qa = ConversationalRetrievalChain.from_llm(llm=llm,retriever=docsearch.as_retriever(),eturn_source_documents=True) Will try this one in the future
         print("Querying Result")
         # result = qa.run(question)
-        result = qa({"question": f"{question}"}, return_only_outputs=True)
-        print(f"Result : {len(result)}\n{result}")
-        return result
+        result_alternative = qa_alternative({"question":question})
+        # result = qa({"question": f"{question}"}, return_only_outputs=True)
+        # print(f"Result : {len(result)}\n{result}")
+        # delete chroma
+        del docsearch
+        del Chroma
+
+        return result_alternative
     def _run(self, question: str, keywords:str, connection_id:str) -> str:
         raise NotImplementedError("Google Drive Document Search Asynchronously does not support sync, it only works async")
 
@@ -112,6 +123,34 @@ def DuckDuckGoTool(Question:str) -> List[Document] :
     docs = [Document(page_content=result)]
     return docs
 
+class SearchOnNotionTool(BaseTool):
+    name="NotionSearch"
+    description= "Searches on notion on every page where user has access to it. Finds the all pages and does semantic search in order to return user question"
+    args_schema: Type[NotionPageSearch] | None = NotionPageSearch
+    def _run(self,question:str,run_manager : Optional[CallbackManagerForToolRun] = None) -> Any:
+        print("SearchOnNotionTool._run() is being called")
+        document_list = notion_get_content_document()
+        docsearch = Chroma.from_documents(document_list, embeddings)
+        print("Calling RetrievalQA")
+        qa = RetrievalQA.from_chain_type(llm=llm, chain_type="stuff", retriever=docsearch.as_retriever())
+        # qa = ConversationalRetrievalChain.from_llm(llm=llm,retriever=docsearch.as_retriever(),eturn_source_documents=True) Will try this one in the future
+        print("Querying Result")
+        # result = qa.run(question)
+        result = qa.run(question)
+        print(f"Result : {len(result)}\n{result}")
+        return result
+    async def _arun(self,question:str,run_manager : Optional[AsyncCallbackManagerForToolRun] = None) -> Any:
+        print("SearchOnNotionTool._arun() is being called")
+        document_list = await notion_get_content_document()
+        docsearch = Chroma.from_documents(document_list, embeddings)
+        print("Calling RetrievalQA")
+        qa = RetrievalQA.from_chain_type(llm=llm, chain_type="stuff", retriever=docsearch.as_retriever())
+        # qa = ConversationalRetrievalChain.from_llm(llm=llm,retriever=docsearch.as_retriever(),eturn_source_documents=True) Will try this one in the future
+        print("Querying Result")
+        # result = qa.run(question)
+        result = qa.run(question)
+        print(f"Result : {len(result)}\n{result}")
+        return result
 
 tool_class = [UserDocumentSearchAsynchronously(),GetPowerValue()]
 tool_search_class = [UserDocumentSearchAsynchronously()]

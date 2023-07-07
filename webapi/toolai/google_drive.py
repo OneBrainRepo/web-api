@@ -18,7 +18,7 @@ def split_text_into_chunks(text, chunk_size):
 
 chunk_size = 600
 
-async def invoke_endpoint_async(url:str,body:dict={},headers:dict={},req_type : str="GET",timeout:int = 30):
+async def invoke_endpoint_async(url:str,body:dict={},headers:dict={},req_type : str="GET",timeout:int = 60):
     """
     Get URL, Request Type, Headers, Body
     URL - url = str URL address of the endpoint
