@@ -34,8 +34,8 @@ services:
       - postgres_data:/var/lib/postgresql/data
     environment:
       - POSTGRES_DB=postgres # local development only, will make something complicated for prod
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_USER=YRTEDXCUYVUFUCKYOURMOTHERHBIJKMvdfsgji
+      - POSTGRES_PASSWORD=&R£$RDJ_!fgsddsftgrTVYSAIUOANSopm7894235erf.mksvdfcwetgzvfeedarvzSVFsr8yikvcmxfdc
     ports:
       - "5432:5432"
 
@@ -43,8 +43,8 @@ services:
     image: mongo
     restart: always
     environment:
-      MONGO_INITDB_ROOT_USERNAME: root
-      MONGO_INITDB_ROOT_PASSWORD: example
+      MONGO_INITDB_ROOT_USERNAME: hjdbfgkydrtmksaewtrYTUASVBHZXJNKASR43edcs
+      MONGO_INITDB_ROOT_PASSWORD: D&RE*&WYH*UJDdfasgrtsfbvd654waefcvdxrcsZd65
     volumes:
       - mongodb_data:/data/db
     ports:

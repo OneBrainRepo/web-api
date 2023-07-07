@@ -10,7 +10,7 @@ from langchain.embeddings.openai import OpenAIEmbeddings
 llm = ChatOpenAI(
         openai_api_key=openai_api_key,
         temperature=0.3,
-        model_name='gpt-3.5-turbo'
+        model_name='gpt-3.5-turbo-0613'
 )
 
 conversational_memory = ConversationBufferWindowMemory(

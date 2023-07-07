@@ -2,7 +2,7 @@ from webapi.mongo.CRUD import *
 from webapi.conversation.conversation_dto import ChatHistoryByID, ChatHistoryAppend, ChatUpdateTitle, ChatUpdateMessage, ChatHistoryCreate, ChatHistoryAppendToEnd, Chat_MachineAnswer_single, ChatUpdateMessageByIndex, ChatUpdateMessageListByIndex
 from webapi.users.users_dto import UserPublic
 from webapi.mongo.models import Author, ChatHistory
-from webapi.toolai.agent import agent_add_ai_messages,agent_add_human_messages,agent_awaitrun_with_messages,agent_awaitrun,generate_title_ai
+from webapi.toolai.agent import agent_add_ai_messages,agent_add_human_messages,agent_awaitrun_with_messages,agent_awaitrun,generate_title_ai, duckduckgo_search_agent, tool_debug
 from webapi.users.users import allow_block_limit_for_message, increment_message_usage, find_connection_id
 from fastapi import HTTPException
 from typing import Any
@@ -64,7 +64,9 @@ def covert_to_public_user_format(user_id):
     )
 
 def sanitize(input_string:str):
-    return re.sub(r'[^A-Za-z0-9 _-]+', '', input_string)
+    return input_string
+    # DISABLED FOR DEMO
+    #return re.sub(r'[^A-Za-z0-9 _-]+', '', input_string)
 
 def get_last_conversation(userid:dict[str,str]) -> (dict[str, str] | dict[str, Any]) :
     """
@@ -313,10 +315,13 @@ async def append_to_response(userid:dict[str,str],payload:ChatHistoryAppendToEnd
         user_question_sanitized = sanitize(payload.Question)
         crafted_user_question_with_connectionid = user_question_sanitized + f" . My connection_id : {foundConnectionID.connection_id}"
         # Import agent and preload it with this information
-        result = await agent_awaitrun_with_messages(question=crafted_user_question_with_connectionid,HumanMessages=userQuestionsList,AIMessages=machineAnswersList)
+        # result = await agent_awaitrun_with_messages(question=crafted_user_question_with_connectionid,HumanMessages=userQuestionsList,AIMessages=machineAnswersList)
+        # Agent does not hold any memory in this
+        result = await agent_awaitrun(question=crafted_user_question_with_connectionid)
     except Exception as e:
         print(f"Exception at Append : {e}")
         raise create_exception_500
+    print(f"Type payload : {type(result)}\Answer : {result}")
     # Create the payload
     database_payload = ChatHistoryAppend(id=payload.ChatID,UserQuestions=payload.Question,MachineAnswers=result)
     """
@@ -335,6 +340,13 @@ async def create_new_response(userid:dict[str,str],payload:Chat_MachineAnswer_si
         user_question_sanitized = sanitize(payload.Question)
         # Will be using crafted user question to handle it 
         crafted_user_question_with_connectionid = user_question_sanitized + f" . My connection_id : {foundConnectionID.connection_id}"
+        print(f"Question : {crafted_user_question_with_connectionid}")
+        # question = {
+        #     "input":{
+        #         "question": user_question_sanitized,
+        #         "connection_id": foundConnectionID.connection_id
+        #     }
+        # }
         result = await agent_awaitrun(question=crafted_user_question_with_connectionid)
         title = generate_title_ai(question=user_question_sanitized)
     except Exception as e:
@@ -366,3 +378,11 @@ async def regenerate_response(messageIdx:int,userid:dict[str,str],chatid:str):
     machineAnswersList[messageIdx] = result
     crafted_payload = ChatUpdateMessageListByIndex(id=chatid,Chat_MachineAnswerList=machineAnswersList,Chat_UserQuestionList=userQuestionsList)
     return change_specific_message_by_index(payload=crafted_payload,userid=userid)
+
+async def tool_debugger(input):
+    return await tool_debug(input=input)
+
+def duckduckgo_search_conversation(Question:str):
+    print(f"Calling Conversation DuckDuckGo")
+    return duckduckgo_search_agent(Question)
+    

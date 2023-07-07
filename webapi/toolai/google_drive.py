@@ -18,7 +18,7 @@ def split_text_into_chunks(text, chunk_size):
 
 chunk_size = 600
 
-async def invoke_endpoint_async(url:str,body:dict={},headers:dict={},req_type : str="GET",timeout:int = 30):
+async def invoke_endpoint_async(url:str,body:dict={},headers:dict={},req_type : str="GET",timeout:int = 60):
     """
     Get URL, Request Type, Headers, Body
     URL - url = str URL address of the endpoint
@@ -133,15 +133,15 @@ async def google_drive_search(keywords : List[str],connection_id:str):
         search_results = await invoke_endpoint_async(url=url,body=payload,headers=headers,req_type="POST")
     except Exception as e:
         print(f"Error Occured during Google Drive Search\nError : {e}")
-        return "Error Occured during Google Drive Search"
+        return "API integration of Google Drive Search is currently down. This happens when too many users are testing the demo at once. Please try again shortly, when the traffic is lower. Thank you for your understanding"
     if search_results.status_code != 200:
         print(f"[LOGERR] Connection Error | Status Code : {search_results.status_code}")
         if search_results.status_code == 400:
             print("[LOGERR] Request parameter has unmatched keys in the body")
-            return "Tool is missing parameters to complete this search. If this issue is persistent please report it"
+            return "There has been a minor error from me when I was communicating with the API. Please re-write the question and I will do my best to get you an answer this time."
         if search_results.status_code == 500:
             print("[LOGERR] Onlizer API is down")
-            return "Search API is currently unavaliable"
+            return "Looks like Integration application is down as I see a 500 error. I will notify the OneBrain team of this problem and it will be fixed as soon as possible."
     # Process data
     docs_found = search_results.json().get('files')
     del search_results
