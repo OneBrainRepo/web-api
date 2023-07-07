@@ -84,26 +84,27 @@ class UserDocumentSearchAsynchronously(BaseTool):
         print("Searching through documents")
         if type(document_list) == str:
             # Document list has returned an error
-            return "Respond to user as : Sorry there was an error occured, please ask again"
+            return f"Return user that there was an error. Explain him why it happened. Here is the error detail : {document_list}"
         from langchain.vectorstores import Chroma
         docsearch = Chroma.from_documents(document_list, embeddings,metadatas=[{"source": f"{i}"} for i in range(len(document_list))])
         print("Calling RetrievalQA")
         # qa = RetrievalQAWithSourcesChain.from_chain_type(llm=llm, chain_type="stuff", retriever=docsearch.as_retriever())
-        print(f"Calling Alternative QA with Conversational chain")
-        from langchain.memory import ConversationBufferMemory
-        memory = ConversationBufferMemory(memory_key="chat_history", return_messages=True)
-        qa_alternative = ConversationalRetrievalChain.from_llm(llm=llm,retriever=docsearch.as_retriever(),memory=memory,verbose=True)
+        print(f"Calling Alternative QA with RetrivalQA chain")
+        # from langchain.memory import ConversationBufferMemory
+        # memory = ConversationBufferMemory(memory_key="chat_history", return_messages=True)
+        # qa_alternative = ConversationalRetrievalChain.from_llm(llm=llm,retriever=docsearch.as_retriever(),memory=memory,verbose=True)
         # qa = ConversationalRetrievalChain.from_llm(llm=llm,retriever=docsearch.as_retriever(),eturn_source_documents=True) Will try this one in the future
         print("Querying Result")
-        # result = qa.run(question)
-        result_alternative = qa_alternative({"question":question})
+        qa = RetrievalQA.from_chain_type(llm=llm, chain_type="stuff", retriever=docsearch.as_retriever())
+        result = qa.run(question)
+        # result_alternative = qa_alternative({"question":question})
         # result = qa({"question": f"{question}"}, return_only_outputs=True)
         # print(f"Result : {len(result)}\n{result}")
         # delete chroma
         del docsearch
         del Chroma
 
-        return result_alternative
+        return result
     def _run(self, question: str, keywords:str, connection_id:str) -> str:
         raise NotImplementedError("Google Drive Document Search Asynchronously does not support sync, it only works async")
 

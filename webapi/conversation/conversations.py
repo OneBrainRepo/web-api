@@ -315,10 +315,13 @@ async def append_to_response(userid:dict[str,str],payload:ChatHistoryAppendToEnd
         user_question_sanitized = sanitize(payload.Question)
         crafted_user_question_with_connectionid = user_question_sanitized + f" . My connection_id : {foundConnectionID.connection_id}"
         # Import agent and preload it with this information
-        result = await agent_awaitrun_with_messages(question=crafted_user_question_with_connectionid,HumanMessages=userQuestionsList,AIMessages=machineAnswersList)
+        # result = await agent_awaitrun_with_messages(question=crafted_user_question_with_connectionid,HumanMessages=userQuestionsList,AIMessages=machineAnswersList)
+        # Agent does not hold any memory in this
+        result = await agent_awaitrun(question=crafted_user_question_with_connectionid)
     except Exception as e:
         print(f"Exception at Append : {e}")
         raise create_exception_500
+    print(f"Type payload : {type(result)}\Answer : {result}")
     # Create the payload
     database_payload = ChatHistoryAppend(id=payload.ChatID,UserQuestions=payload.Question,MachineAnswers=result)
     """
