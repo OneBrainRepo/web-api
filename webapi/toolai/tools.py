@@ -3,7 +3,8 @@ from langchain.chains import RetrievalQA, RetrievalQAWithSourcesChain, Conversat
 from langchain.callbacks.manager import AsyncCallbackManagerForToolRun, CallbackManagerForToolRun
 from langchain.docstore.document import Document
 from langchain.tools import DuckDuckGoSearchRun
-from typing import Optional, Type, List, Any
+from langchain.vectorstores import Chroma
+from typing import Optional, Type, List, Any 
 import re
 
 from webapi.toolai.google_args_schema import CalculatePower, UserDocumentSearch, NotionPageSearch
@@ -13,6 +14,17 @@ from webapi.toolai.config import llm,embeddings
 
 from langchain.callbacks.manager import AsyncCallbackManagerForToolRun, CallbackManagerForToolRun
 # Define the class
+
+from chromadb.config import Settings
+import chromadb 
+from chromadb import Client
+import uuid
+# Doesnt work for now
+# clientsettings = Settings(chroma_api_impl="rest",
+#                                         chroma_server_host="server",
+#                                         chroma_server_http_port="8000"
+#                                     )
+# client = chromadb.Client(clientsettings)
 
 
 
@@ -47,6 +59,8 @@ class UserDocumentSearchOnDrive(BaseTool):
         document_list = google_drive_search_synchronous(keywords=keywords,connection_id=connection_id)
         if not document_list:
             return "No documents has been found."
+        
+
         docsearch = Chroma.from_documents(document_list, embeddings,metadatas=[{"source": f"{i}"} for i in range(len(document_list))])
         print("Calling RetrievalQA")
         qa = RetrievalQAWithSourcesChain.from_chain_type(llm=llm, chain_type="stuff", retriever=docsearch.as_retriever())
@@ -85,24 +99,38 @@ class UserDocumentSearchAsynchronously(BaseTool):
         if type(document_list) == str:
             # Document list has returned an error
             return f"Return user that there was an error. Explain him why it happened. Here is the error detail : {document_list}"
-        from langchain.vectorstores import Chroma
-        docsearch = Chroma.from_documents(document_list, embeddings,metadatas=[{"source": f"{i}"} for i in range(len(document_list))])
+
+        print("Document has been found")
+        # Generate unique identifier
+        collection_name = str(uuid.uuid4())
+        print(f"Creating connection for user with unique id {collection_name}")
+        print("Estalibshing connection with the vector store with given client settings and collection name")
+        # collection = client.create_collection(collection_name) # Create the collecttion based on connection id which is unqiue
+        # Chromadb4 = Chroma(client_settings=clientsettings,collection_name=collection_name)
+        # With OpenAI Embeddings , Later fix it with other stuff
+        # Find an embeddings solution for this one for cost reduction
+        print("Insert documents into chromadb to Chroma Client")
+        docsearch = Chroma(collection_name=collection_name).from_documents(document_list, embeddings,metadatas=[{"source": f"{i}"} for i in range(len(document_list))])
+        # docsearch = Chroma.from_documents(document_list, embeddings,metadatas=[{"source": f"{i}"} for i in range(len(document_list))])
         print("Calling RetrievalQA")
-        # qa = RetrievalQAWithSourcesChain.from_chain_type(llm=llm, chain_type="stuff", retriever=docsearch.as_retriever())
-        print(f"Calling Alternative QA with RetrivalQA chain")
+        qa = RetrievalQA.from_chain_type(llm=llm, chain_type="stuff", retriever=docsearch.as_retriever())
+        print("Querying Result")
+        result = qa.run(question)
+        # Allocate free space
+        docsearch.delete_collection()
+        # collection.delete() # Delete the collection
+        # Chromadb4.delete_collection()
+        # Chromadb4.delete()
+        # del Chromadb4 # Delete 
+        del docsearch
+        
         # from langchain.memory import ConversationBufferMemory
         # memory = ConversationBufferMemory(memory_key="chat_history", return_messages=True)
         # qa_alternative = ConversationalRetrievalChain.from_llm(llm=llm,retriever=docsearch.as_retriever(),memory=memory,verbose=True)
         # qa = ConversationalRetrievalChain.from_llm(llm=llm,retriever=docsearch.as_retriever(),eturn_source_documents=True) Will try this one in the future
-        print("Querying Result")
-        qa = RetrievalQA.from_chain_type(llm=llm, chain_type="stuff", retriever=docsearch.as_retriever())
-        result = qa.run(question)
         # result_alternative = qa_alternative({"question":question})
         # result = qa({"question": f"{question}"}, return_only_outputs=True)
         # print(f"Result : {len(result)}\n{result}")
-        # delete chroma
-        del docsearch
-        del Chroma
 
         return result
     def _run(self, question: str, keywords:str, connection_id:str) -> str:

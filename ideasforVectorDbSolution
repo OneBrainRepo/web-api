@@ -1,0 +1,18 @@
+1 - Use in memory vectordb 
+Use specific collection name
+Identify the collection and after usage call delete _collection option and test it
+
+2 - dbtest = Chroma(client=client, collection_name=collection_name)
+AttributeError: 'Chroma' object has no attribute '_client_settings'
+
+This error can be due to error in mismatch between library versions, normally
+
+if client is not None:
+            self._client = client
+        else:
+            if client_settings:
+                self._client_settings = client_settings
+
+And chromadb client is accepted to the client part, strangely it does not work for now 
+
+Chromadb still works on memory but we can erase the database after usage
