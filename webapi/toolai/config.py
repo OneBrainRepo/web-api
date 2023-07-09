@@ -6,11 +6,12 @@ os.environ["LANGCHAIN_TRACING"] = "true"
 from langchain.chat_models import ChatOpenAI
 from langchain.chains.conversation.memory import ConversationBufferWindowMemory
 from langchain.embeddings.openai import OpenAIEmbeddings
-
+import uuid
+# client.reset()
 llm = ChatOpenAI(
         openai_api_key=openai_api_key,
         temperature=0.3,
-        model_name='gpt-3.5-turbo'
+        model_name='gpt-3.5-turbo-0613'
 )
 
 conversational_memory = ConversationBufferWindowMemory(
@@ -18,7 +19,7 @@ conversational_memory = ConversationBufferWindowMemory(
         k=5,
         return_messages=True
 )
-
+# https://python.langchain.com/docs/modules/data_connection/text_embedding/integrations/openai
 embeddings = OpenAIEmbeddings()
 
 

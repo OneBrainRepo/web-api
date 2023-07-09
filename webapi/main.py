@@ -4,6 +4,12 @@ from fastapi.middleware.cors import CORSMiddleware
 from webapi.routes import user_routes, demo_routes, chat_routes
 from webapi.db.database import create_tables
 from webapi.mongo.config import connect, MONGODB_DB_NAME, MONGODB_HOST,MONGODB_PORT,MONGODB_DB_USERNAME,MONGODB_DB_PASSWD
+from dotenv import load_dotenv
+
+load_dotenv()
+
+# Disable tracing on LangChain
+os.environ["LANGCHAIN_HANDLER"] = ""
 
 # Cors Settings
 cors_allowed_origins_str = os.getenv("CORS_ALLOWED_ORIGINS", "")

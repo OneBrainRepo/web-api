@@ -1,0 +1,103 @@
+version: '3.7'
+
+services:
+
+  webapi-core:
+    build:
+      context: ./
+    container_name: webapi_core
+    depends_on:
+      - postgres_db
+      - mongo_db
+    env_file:
+      - .env
+    environment:
+      - PYTHONUNBUFFERED=1
+      - VIRTUAL_HOST=demoapi.onebrain.io
+      - LETSENCRYPT_HOST=demoapi.onebrain.io
+      - LETSENCRYPT_EMAIL=sa@onebrain.io
+      - VIRTUAL_PORT=8080
+    expose:
+      - 8080
+    volumes:
+      - ./:/app
+    command:
+      - uvicorn
+      - webapi.main:app
+      - --host
+      - "0.0.0.0"
+      - --port
+      - "8080"
+      - --reload # take away in prod
+    restart: unless-stopped
+    networks:
+      - web_api_default
+
+  nginx-proxy:
+    image: jwilder/nginx-proxy
+    container_name: nginx_proxy
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - /var/run/docker.sock:/tmp/docker.sock:ro
+      - /etc/dockercerts/certs:/etc/nginx/certs
+      - /etc/dockercerts/vhost:/etc/nginx/vhost.d
+      - /etc/dockercerts/html:/usr/share/nginx/html
+      - /etc/dockercerts/dhparam:/etc/nginx/dhparam
+    labels:
+      - com.github.jrcs.letsencrypt_nginx_proxy_companion.nginx_proxy=true
+    restart: always
+    networks:
+      - web_api_default
+
+  letsencrypt-nginx-proxy-companion:
+    image: jrcs/letsencrypt-nginx-proxy-companion
+    depends_on:
+      - nginx-proxy
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /etc/dockercerts/certs:/etc/nginx/certs
+      - /etc/dockercerts/vhost:/etc/nginx/vhost.d
+      - /etc/dockercerts/html:/usr/share/nginx/html
+    restart: always
+    networks:
+      - web_api_default
+
+  postgres_db:
+    image: postgres
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_DB=postgres # local development only, will make something complicated for prod
+      - POSTGRES_USER=YRTEDXCUYVUFUCKYOURMOTHERHBIJKMvdfsgji
+      - POSTGRES_PASSWORD=&R£$RDJ_!fgsddsftgrTVYSAIUOANSopm7894235erf.mksvdfcwetgzvfeedarvzSVFsr8yikvcmxfdc
+    ports:
+      - "5432:5432"
+    networks:
+      - web_api_default
+
+  mongo_db:
+    image: mongo
+    restart: always
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: hjdbfgkydrtmksaewtrYTUASVBHZXJNKASR43edcs
+      MONGO_INITDB_ROOT_PASSWORD: D&RE*&WYH*UJDdfasgrtsfbvd654waefcvdxrcsZd65
+    volumes:
+      - mongodb_data:/data/db
+    ports:
+      - "27017:27017"
+    networks:
+      - web_api_default
+
+volumes:
+  postgres_data:
+  mongodb_data:
+  certs:
+  vhost:
+  html:
+  dhparam:
+
+networks:
+  web_api_default:
+

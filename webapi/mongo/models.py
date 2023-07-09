@@ -1,4 +1,4 @@
-from mongoengine import Document, StringField, ListField, ReferenceField, IntField, DateTimeField, UUIDField
+from mongoengine import Document, StringField, ListField, ReferenceField, IntField, DateTimeField, UUIDField, SequenceField
 from datetime import datetime
 from uuid import uuid4
 
@@ -9,7 +9,8 @@ class Author(Document):
     id - Holds userid from SQL database to keep track of the user
     """
     name = StringField(required=True)
-    author_id = IntField(required=True)
+    email = StringField(required=True)
+    author_id = SequenceField(unique=True)
 
 class ChatHistory(Document):
     """

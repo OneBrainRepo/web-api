@@ -8,7 +8,7 @@ import uuid
 
 
 class Users(SQLModel, table=True):
-    id: Optional[int] = Field(default=None, primary_key=True)
+    id: Optional[int] = Field(default=None, primary_key=True, unique=True)
     uuid: Optional[str] = Field(default=str(uuid.uuid4()))
     username: str
     hashed_password: str
