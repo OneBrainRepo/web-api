@@ -27,6 +27,8 @@ services:
       - "8080"
       - --reload # take away in prod
     restart: unless-stopped
+    # networks: # Add this
+    #   - web-api_default
 
   postgres_db:
     image: postgres
@@ -49,6 +51,10 @@ services:
       - mongodb_data:/data/db
     ports:
       - "27017:27017"
+# Later when we can test the seperate vector db
+# networks: # Add this
+#   web-api_default:
+#     external: true
 
 volumes:
   postgres_data:
