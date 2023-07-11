@@ -68,9 +68,9 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     environment:
-      - POSTGRES_DB=postgres # local development only, will make something complicated for prod
+      - POSTGRES_DB=postgres
       - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_PASSWORD=SwY9vs3xPQaGGLTA8bTtpdg7s
     ports:
       - "5432:5432"
     networks:
@@ -80,8 +80,8 @@ services:
     image: mongo
     restart: always
     environment:
-      MONGO_INITDB_ROOT_USERNAME: root
-      MONGO_INITDB_ROOT_PASSWORD: example
+      MONGO_INITDB_ROOT_USERNAME: mongodocumentuser
+      MONGO_INITDB_ROOT_PASSWORD: dstxosGTj958AryWtCWA74kzq
     volumes:
       - mongodb_data:/data/db
     ports:
