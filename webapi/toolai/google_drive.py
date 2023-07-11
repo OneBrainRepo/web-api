@@ -180,11 +180,25 @@ def google_drive_documentizer(docs_found:list,option:int = 1):
             chunk_size
         )
     ]
+    fullText = [
+        Document(
+            page_content=chunk + ' View link to document: ' + str(doc.get('viewLink', '')), 
+            word_count=len(chunk.split()),
+            metadata={"source":str(doc.get('viewLink', ''))}
+        )
+        for doc in docs_found if doc
+        for chunk in split_text_into_chunks(
+            (doc.get('fullText') or '') + ' View link to document: ' + str(doc.get('viewLink', '')),
+            chunk_size
+        )
+    ]
     if not option:
         return texts
     else: 
         if option == 1:
             return summaries
+        elif option == 2 :
+            return fullText
         else:
             return texts if len(summaries)<1 else summaries
 
@@ -205,6 +219,10 @@ def google_drive_summarizer(docs_found:list,options:int):
     # Summaries with the link
     summaries = ' '.join([
     str(doc.get('summary', '')) + ' View link to document: ' + str(doc.get('viewLink', '')) 
+    for doc in docs_found
+    ])
+    fullText = ' '.join([
+    str(doc.get('fullText', '')) + ' View link to document: ' + str(doc.get('viewLink', '')) 
     for doc in docs_found
     ])
     # Include viewLink at the end of paragrahps

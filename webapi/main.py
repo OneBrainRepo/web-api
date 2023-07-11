@@ -29,6 +29,10 @@ create_tables()
 # Connect MongoDB
 # connect(db=MONGODB_DB_NAME, host=MONGODB_HOST, port=int(MONGODB_PORT), username=MONGODB_DB_USERNAME, password=MONGODB_DB_PASSWD)
 ## Add super routes
+
+@app.get("/health-check")
+def getHealthCheck():
+    return "ok"
 # Demo Under /demo route
 app.include_router(user_routes.router,tags=["Users"],prefix="/users")
 app.include_router(demo_routes.router,tags=["Demo"],prefix="/demo")
