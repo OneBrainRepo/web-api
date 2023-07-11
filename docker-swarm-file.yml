@@ -1,0 +1,76 @@
+version: '3.7'
+
+services:
+  webapi-core:
+    build:
+      context: ./
+    container_name: webapi_core
+    env_file:
+      - .env
+    environment:
+      - PYTHONUNBUFFERED=1
+      - VIRTUAL_HOST=demoapi.onebrain.io
+      - LETSENCRYPT_HOST=demoapi.onebrain.io
+      - LETSENCRYPT_EMAIL=sa@onebrain.io
+      - VIRTUAL_PORT=8080
+    expose:
+      - 8080
+    volumes:
+      - ./:/app
+    command:
+      - uvicorn
+      - webapi.main:app
+      - --host
+      - "0.0.0.0"
+      - --port
+      - "8080"
+      - --reload # take away in prod
+    deploy:
+      replicas: 3
+      resources:
+        limits:
+          cpus: '1' # 1 CPU for each
+          memory: 4000M # 4 GB of memory for default
+    restart: unless-stopped
+    networks:
+      - web_api_default
+
+  nginx-proxy:
+    image: jwilder/nginx-proxy
+    container_name: nginx_proxy
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - /var/run/docker.sock:/tmp/docker.sock:ro
+      - /etc/dockercerts/certs:/etc/nginx/certs
+      - /etc/dockercerts/vhost:/etc/nginx/vhost.d
+      - /etc/dockercerts/html:/usr/share/nginx/html
+      - /etc/dockercerts/dhparam:/etc/nginx/dhparam
+    labels:
+      - com.github.jrcs.letsencrypt_nginx_proxy_companion.nginx_proxy=true
+    restart: always
+    networks:
+      - web_api_default
+
+  letsencrypt-nginx-proxy-companion:
+    image: jrcs/letsencrypt-nginx-proxy-companion
+    depends_on:
+      - nginx-proxy
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /etc/dockercerts/certs:/etc/nginx/certs
+      - /etc/dockercerts/vhost:/etc/nginx/vhost.d
+      - /etc/dockercerts/html:/usr/share/nginx/html
+    restart: always
+    networks:
+      - web_api_default
+
+volumes:
+  certs:
+  vhost:
+  html:
+  dhparam:
+
+networks:
+  web_api_default:
