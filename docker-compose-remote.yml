@@ -101,3 +101,5 @@ volumes:
 networks:
   web_api_default:
 
+# psql -h demodb-rds-postgres.ccfoa2u5z3jb.eu-central-1.rds.amazonaws.com --username postgres
+# mongosh -u mongodocumentuser -p dstxosGTj958AryWtCWA74kzq demodb-documentdb.cluster-ccfoa2u5z3jb.eu-central-1.docdb.amazonaws.com:27017
