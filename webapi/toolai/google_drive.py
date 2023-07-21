@@ -77,7 +77,7 @@ def google_drive_search_synchronous(keywords : List[str],connection_id:str):
     })
     headers = {
     'Content-Type': 'application/json',
-    'Authorization': 'Bearer ZDE2YThmNGU3ODhhODkwMTdkMjQ5ZDA1ZmMwM2I2ZGY6OWFkNThmODE5OWViNmFjNmU4NWRkNjI2NTIyZTJhMGE='
+    'Authorization': 'Bearer ZDE2YThmNGU3ODhhODkwMTdkMjQ5ZDA1ZmMwM2I2ZGY6NTM1N2ZmMDVjMWQ4OWY4NTYwZTQ5NTEyZGQzMTMzYTk='
     }
     try:
         search_results = requests.request("POST", url, headers=headers, data=payload)
@@ -92,7 +92,11 @@ def google_drive_search_synchronous(keywords : List[str],connection_id:str):
         if search_results.status_code == 500:
             print("[LOGERR] Onlizer API is down")
             return "Search API is currently unavaliable"
+        # Else
+        print(f"Search result data : {search_results.reason}")
+        return "Search API is not avaliable"
     # Process data
+
     docs_found = search_results.json().get('files')
     del search_results
     wholesummary = google_drive_documentizer(docs_found=docs_found)
@@ -125,9 +129,13 @@ async def google_drive_search(keywords : List[str],connection_id:str):
     }  
     }
     headers = {
-    'Content-Type': 'application/json',
-    'Authorization': 'Bearer ZDE2YThmNGU3ODhhODkwMTdkMjQ5ZDA1ZmMwM2I2ZGY6OWFkNThmODE5OWViNmFjNmU4NWRkNjI2NTIyZTJhMGE='
+    'Authorization': 'Bearer ZDE2YThmNGU3ODhhODkwMTdkMjQ5ZDA1ZmMwM2I2ZGY6NTM1N2ZmMDVjMWQ4OWY4NTYwZTQ5NTEyZGQzMTMzYTk=',
+    'Content-Type': 'application/json'
     }
+    # headers = {
+    # 'Content-Type': 'application/json',
+    # 'Authorization': 'Bearer ZDE2YThmNGU3ODhhODkwMTdkMjQ5ZDA1ZmMwM2I2ZGY6OWFkNThmODE5OWViNmFjNmU4NWRkNjI2NTIyZTJhMGE='
+    # }
     try:
         print(f"Current Payload : {payload}")
         search_results = await invoke_endpoint_async(url=url,body=payload,headers=headers,req_type="POST")
@@ -142,6 +150,9 @@ async def google_drive_search(keywords : List[str],connection_id:str):
         if search_results.status_code == 500:
             print("[LOGERR] Onlizer API is down")
             return "Looks like Integration application is down as I see a 500 error. I will notify the OneBrain team of this problem and it will be fixed as soon as possible."
+        # Else
+        print(f"Search result reason : {search_results.reason_phrase}\nResult : {search_results.text}")
+        return "An error occured during the call"
     # Process data
     docs_found = search_results.json().get('files')
     del search_results
